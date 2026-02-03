@@ -19,7 +19,7 @@ try:
 	# '1/32step': A cycle = 200 * 32 steps
 	"""
 
-	Motor1.SetMicroStep('softward','fullstep')
+	Motor1.SetMicroStep('software','fullstep')
 	Motor1.TurnStep(Dir='forward', steps=800, stepdelay = 0.002)
 	time.sleep(0.5)
 	Motor1.TurnStep(Dir='backward', steps=800, stepdelay = 0.002)
@@ -36,7 +36,7 @@ try:
 	# '1/32step': A cycle = 2048 * 32 steps
 	"""
 	
-	Motor1.SetMicroStep('hardward' ,'halfstep')    
+	Motor1.SetMicroStep('hardware' ,'halfstep')    
 	Motor1.TurnStep(Dir='forward', steps=3200, stepdelay=0.002)
 	time.sleep(0.5)
 	Motor1.TurnStep(Dir='backward', steps=3200, stepdelay=0.002)

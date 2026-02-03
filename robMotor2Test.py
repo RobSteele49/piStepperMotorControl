@@ -19,7 +19,7 @@ try:
 	# '1/32step': A cycle = 200 * 32 steps
 	"""
 	
-	Motor2.SetMicroStep('softward','fullstep')
+	Motor2.SetMicroStep('software','fullstep')
 	Motor2.TurnStep(Dir='forward', steps=800, stepdelay = 0.002)
 	time.sleep(0.5)
 	Motor2.TurnStep(Dir='backward', steps=800, stepdelay = 0.002)
@@ -37,7 +37,7 @@ try:
 	# '1/32step': A cycle = 2048 * 32 steps
 	"""
 
-	Motor2.SetMicroStep('hardward' ,'halfstep')    
+	Motor2.SetMicroStep('hardware' ,'halfstep')    
 	Motor2.TurnStep(Dir='forward', steps=3200, stepdelay=0.002)
 	time.sleep(0.5)
 	Motor2.TurnStep(Dir='backward', steps=3200, stepdelay=0.002)
