@@ -9,8 +9,8 @@ MotorDir = [
 ]
 
 ControlMode = [
-    'hardward',
-    'softward',
+    'hardware',
+    'software',
 ]
 
 class DRV8825():
@@ -36,7 +36,7 @@ class DRV8825():
     def SetMicroStep(self, mode, stepformat):
         """
         (1) mode
-            'hardward' :    Use the switch on the module to control the microstep
+            'hardware' :    Use the switch on the module to control the microstep
             'software' :    Use software to control microstep pin levels
                 Need to put the All switch to 0
         (2) stepformat
@@ -56,7 +56,7 @@ class DRV8825():
         
     def TurnStep(self, Dir, steps, stepdelay=0.005):
         if (Dir == MotorDir[0]):
-            print ("forward")
+            print ("forware")
             self.digital_write(self.enable_pin, 1)
             self.digital_write(self.dir_pin, 0)
         elif (Dir == MotorDir[1]):

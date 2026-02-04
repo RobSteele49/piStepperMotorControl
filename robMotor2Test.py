@@ -10,7 +10,7 @@ try:
 
 	"""
 	# 1.8 degree: nema23, nema14
-	# softward Control :
+	# software Control :
 	# 'fullstep': A cycle = 200 steps
 	# 'halfstep': A cycle = 200 * 2 steps
 	# '1/4step': A cycle = 200 * 4 steps
@@ -28,7 +28,7 @@ try:
 	
 	"""
 	# 28BJY-48:
-	# softward Control :
+	# software Control :
 	# 'fullstep': A cycle = 2048 steps
 	# 'halfstep': A cycle = 2048 * 2 steps
 	# '1/4step': A cycle = 2048 * 4 steps
