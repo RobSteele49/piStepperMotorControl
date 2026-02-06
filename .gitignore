@@ -1,0 +1,44 @@
+# -------------------------
+# Build artifacts
+# -------------------------
+build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile
+*.cmake
+focuserd
+
+# -------------------------
+# Backup / editor temp files
+# -------------------------
+*~
+\#*\#
+*.swp
+*.swo
+*.bak
+
+# -------------------------
+# Versioned scratch / experiments
+# -------------------------
+*.v0
+*.v1
+*.v2
+
+# -------------------------
+# Python cache files
+# -------------------------
+__pycache__/
+*.pyc
+
+# -------------------------
+# OS / filesystem noise
+# -------------------------
+.DS_Store
+Thumbs.db
+
+# -------------------------
+# Optional: local scripts or notes
+# -------------------------
+*.log
+*.tmp
