@@ -63,7 +63,7 @@ public:
     // Move the motor a given number of steps
     void moveSteps(Direction direction,
                    int steps,
-                   double stepDelaySeconds);
+                   int stepDelayMicroSeconds);
 
 private:
     // Helper to write a value to a GPIO line by offset

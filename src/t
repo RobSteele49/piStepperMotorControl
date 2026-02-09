@@ -1,0 +1,30 @@
+    gpiod_line_config_add_line_settings(
+        lineConfig,
+        offsets.data(),
+        offsets.size(),
+        settings
+    );
+
+------------
+
+    gpiod_line_settings* settings = gpiod_line_settings_new();
+
+    gpiod_line_settings_set_direction(
+        settings,
+        GPIOD_LINE_DIRECTION_OUTPUT
+    );
+
+    // *** THIS IS THE IMPORTANT LINE ***
+    // Force push-pull output so STEP gets a real HIGH level
+    gpiod_line_settings_set_drive(
+        settings,
+        GPIOD_LINE_DRIVE_PUSH_PULL
+    );
+
+    gpiod_line_config* lineConfig = gpiod_line_config_new();
+    gpiod_line_config_add_line_settings(
+        lineConfig,
+        offsets.data(),
+        offsets.size(),
+        settings
+    );
