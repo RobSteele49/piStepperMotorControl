@@ -14,6 +14,12 @@ public:
     void setPower(bool on);
     void moveAtHz(int frequency, Direction dir);
     void stop();
+    
+    // Smoothly increase speed to targetHz
+    void moveRamped(int targetHz, int rampTimeMs, Direction dir);
+
+    // Smoothly decrease speed from currentHz to 0
+    void stopRamped(int currentHz, int rampTimeMs);
 
 private:
     int _en, _dir, _step;

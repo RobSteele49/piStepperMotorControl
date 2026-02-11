@@ -3,37 +3,30 @@
 #include "WaveShareStepper.hpp"
 
 int main() {
-    // Initialize pigpio library
-    if (gpioInitialise() < 0) {
-        std::cerr << "pigpio initialization failed." << std::endl;
-        return 1;
-    }
+    if (gpioInitialise() < 0) return 1;
 
-    // Create motor objects using our new Class
-    WaveShareStepper focuser(MOTOR_1);
-    WaveShareStepper rotator(MOTOR_2);
+    { // SCOPE START: Ensure motor objects are destroyed BEFORE gpioTerminate()
+        WaveShareStepper focuser(MOTOR_1);
+        WaveShareStepper rotator(MOTOR_2);
 
-    std::cout << "Energizing motors..." << std::endl;
-    focuser.setPower(true);
-    rotator.setPower(true);
+	int targetSpeed = 1500; // going a little faster
+	int rampTime    = 1500; // 1.5 seconds
+	
+        std::cout << "Starting Ramped Rotation..." << std::endl;
 
-    // Scenario: Move both at once. 
-    // Focuser moves slowly (600Hz), Rotator moves faster (1200Hz)
-    std::cout << "Moving both motors simultaneously..." << std::endl;
-    focuser.moveAtHz(600, CW);
-    rotator.moveAtHz(1200, CCW);
+	// 1. Smooth Start
+        // Ramp up to 1500Hz over 1.5 seconds
+        rotator.moveRamped(targetSpeed, rampTime, CW);
 
-    // Since PWM runs in the background, we must 'sleep' the main thread
-    // to let the hardware do its work.
-    sleep(3); 
+	// 2. Cruise
+        std::cout << "Cruising at target speed..." << std::endl;
+        sleep(2); 
 
-    std::cout << "Stopping motors." << std::endl;
-    focuser.stop();
-    rotator.stop();
-
-    // Release power to keep motors cool
-    focuser.setPower(false);
-    rotator.setPower(false);
+	// 3. Smooth Stop
+	
+        rotator.stopRamped(targetSpeed, rampTime);
+        rotator.setPower(false);
+    } // SCOPE END: Destructors run here
 
     gpioTerminate();
     return 0;
