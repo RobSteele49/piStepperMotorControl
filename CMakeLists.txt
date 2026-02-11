@@ -21,3 +21,6 @@ add_test_tool(dual_motor_test test/dual_motor_test.cpp)
 
 # 2. Your Zeroing utility
 add_test_tool(zero_focuser test/zero_focuser.cpp)
+
+#3. Backlash check utility
+add_test_tool(backlash_check test/backlash_check.cpp)
