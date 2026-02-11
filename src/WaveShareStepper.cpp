@@ -1,5 +1,6 @@
 #include "WaveShareStepper.hpp"
 #include <iostream>
+#include <cmath>
 
 WaveShareStepper::WaveShareStepper(MotorChannel channel) {
     if (channel == MOTOR_1) {
@@ -22,17 +23,43 @@ void WaveShareStepper::setPower(bool on) {
     gpioWrite(_en, on ? 1 : 0);
 }
 
+void WaveShareStepper::stop() {
+    gpioHardwarePWM(_step, 0, 0);
+    _currentHz = 0;
+}
+
+// Start a background crawl (Non-blocking)
 void WaveShareStepper::moveAtHz(int frequency, Direction dir) {
     if (!_is_enabled) setPower(true);
-    _currentHz = frequency;
     _currentDir = dir;
+    _currentHz = frequency;
     gpioWrite(_dir, (int)_currentDir);
     gpioHardwarePWM(_step, _currentHz, 500000); 
 }
 
-void WaveShareStepper::stop() {
-    gpioHardwarePWM(_step, 0, 0);
-    _currentHz = 0;
+// Move a specific number of steps (Blocking)
+void WaveShareStepper::moveSteps(int steps, int speedHz, Direction dir) {
+    if (steps <= 0) return;
+    moveAtHz(speedHz, dir);
+    
+    double duration = (double)steps / speedHz;
+    time_sleep(duration);
+
+    stop();
+
+    if (_currentDir == CW) _stepPosition += steps;
+    else _stepPosition -= steps;
+}
+
+void WaveShareStepper::moveRelative(long long offset, int speedHz) {
+    Direction dir = (offset >= 0) ? CW : CCW;
+    moveSteps(std::abs(offset), speedHz, dir);
+}
+
+void WaveShareStepper::moveTo(long long targetPosition, int speedHz) {
+    long long distanceToMove = targetPosition - _stepPosition;
+    if (distanceToMove == 0) return;
+    moveRelative(distanceToMove, speedHz);
 }
 
 void WaveShareStepper::moveRamped(int targetHz, int rampTimeMs, Direction dir) {
@@ -40,30 +67,38 @@ void WaveShareStepper::moveRamped(int targetHz, int rampTimeMs, Direction dir) {
     _currentDir = dir;
     gpioWrite(_dir, (int)_currentDir);
 
-    int steps = 20; 
-    int freqStep = targetHz / steps;
-    int delayUs = (rampTimeMs * 1000) / steps;
+    int stepsCount = 20; 
+    int freqStep = targetHz / stepsCount;
+    int delayUs = (rampTimeMs * 1000) / stepsCount;
+    long stepsInRamp = (targetHz / 2.0) * (rampTimeMs / 1000.0);
 
-    for (int i = 1; i <= steps; i++) {
+    for (int i = 1; i <= stepsCount; i++) {
         _currentHz = i * freqStep;
         gpioHardwarePWM(_step, _currentHz, 500000);
         gpioDelay(delayUs); 
     }
+
+    if (_currentDir == CW) _stepPosition += stepsInRamp;
+    else _stepPosition -= stepsInRamp;
 }
 
 void WaveShareStepper::stopRamped(int rampTimeMs) {
-    if (_currentHz == 0) return; // Already stopped
+    if (_currentHz == 0) return;
 
-    int steps = 20; 
+    long stepsInRamp = (_currentHz / 2.0) * (rampTimeMs / 1000.0);
+    int stepsCount = 20; 
     int startHz = _currentHz;
-    int freqStep = startHz / steps;
-    int delayUs = (rampTimeMs * 1000) / steps;
+    int freqStep = startHz / stepsCount;
+    int delayUs = (rampTimeMs * 1000) / stepsCount;
 
-    for (int i = steps; i >= 1; i--) {
+    for (int i = stepsCount; i >= 1; i--) {
         _currentHz = i * freqStep;
         gpioHardwarePWM(_step, _currentHz, 500000);
         gpioDelay(delayUs);
     }
 
-    stop(); // Ensures _currentHz is exactly 0 and PWM is off
+    if (_currentDir == CW) _stepPosition += stepsInRamp;
+    else _stepPosition -= stepsInRamp;
+
+    stop();
 }

@@ -3,54 +3,40 @@
 #include "WaveShareStepper.hpp"
 
 int main() {
-    if (gpioInitialise() < 0) {
-        std::cerr << "pigpio init failed!" << std::endl;
-        return 1;
-    }
+    if (gpioInitialise() < 0) return 1;
 
     {
-        // 1. Initialize our motors
         WaveShareStepper focuser(MOTOR_1);
         WaveShareStepper rotator(MOTOR_2);
 
-        // 2. Power up the coils
         focuser.setPower(true);
         rotator.setPower(true);
-        std::cout << "Motors energized and holding position." << std::endl;
 
-        // --- FORWARD SEQUENCE ---
-        std::cout << "Starting Forward Move (5 seconds)..." << std::endl;
-        
-        // We use moveAtHz so they both start nearly simultaneously
-        // Focuser at 1280Hz (2 revs), Rotator at 640Hz (1 rev)
-        focuser.moveAtHz(1280, CW);
-        rotator.moveAtHz(640, CW);
+        // 1. ROTATOR: Start a slow background "crawl"
+        // This is non-blocking because it doesn't use moveSteps()
+        std::cout << "Rotator starting background crawl at 200Hz..." << std::endl;
+        rotator.moveAtHz(200, CW); 
 
-        sleep(5); // Wait for the 5-second duration
+        // 2. FOCUSER: Perform absolute moves while the rotator turns
+        std::cout << "Focuser moving to Position 5000..." << std::endl;
+        focuser.moveTo(5000, 1000); 
 
-        focuser.stop();
+        sleep(1);
+
+        std::cout << "Focuser moving to Position 1000..." << std::endl;
+        focuser.moveTo(1000, 1200);
+
+        // 3. CLEANUP: Stop the background rotator
+        std::cout << "Stopping Rotator." << std::endl;
         rotator.stop();
-        std::cout << "Move complete. Resting for 2 seconds..." << std::endl;
 
-        // 3. Pause
-        sleep(2);
+        std::cout << "--- FINAL REPORT ---" << std::endl;
+        std::cout << "Focuser Final Pos: " << focuser.getPosition() << std::endl;
+        std::cout << "Rotator Approx Pos: " << rotator.getPosition() << " (Crawl position is estimated)" << std::endl;
 
-        // --- REVERSE SEQUENCE ---
-        std::cout << "Starting Reverse Move (5 seconds)..." << std::endl;
-        
-        focuser.moveAtHz(1280, CCW);
-        rotator.moveAtHz(640, CCW);
-
-        sleep(5);
-
-        focuser.stop();
-        rotator.stop();
-        
-        // 4. Power down to keep the stepper motors and HAT cool
         focuser.setPower(false);
         rotator.setPower(false);
-        std::cout << "Sequence finished. Motors powered down." << std::endl;
-    }
+    } 
 
     gpioTerminate();
     return 0;
