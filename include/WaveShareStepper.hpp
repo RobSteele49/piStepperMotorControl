@@ -15,15 +15,20 @@ public:
     void moveAtHz(int frequency, Direction dir);
     void stop();
     
-    // Smoothly increase speed to targetHz
     void moveRamped(int targetHz, int rampTimeMs, Direction dir);
+    void stopRamped(int rampTimeMs); // No need to pass speed anymore!
 
-    // Smoothly decrease speed from currentHz to 0
-    void stopRamped(int currentHz, int rampTimeMs);
+    // Getters for ASCOM/Alpaca reporting
+    int getCurrentHz() const { return _currentHz; }
+    bool isMoving() const { return _currentHz > 0; }
 
 private:
     int _en, _dir, _step;
     bool _is_enabled = false;
+    
+    // Internal state tracking
+    int _currentHz = 0;
+    Direction _currentDir = CW;
 };
 
 #endif

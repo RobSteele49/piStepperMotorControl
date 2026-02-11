@@ -3,30 +3,54 @@
 #include "WaveShareStepper.hpp"
 
 int main() {
-    if (gpioInitialise() < 0) return 1;
+    if (gpioInitialise() < 0) {
+        std::cerr << "pigpio init failed!" << std::endl;
+        return 1;
+    }
 
-    { // SCOPE START: Ensure motor objects are destroyed BEFORE gpioTerminate()
+    {
+        // 1. Initialize our motors
         WaveShareStepper focuser(MOTOR_1);
         WaveShareStepper rotator(MOTOR_2);
 
-	int targetSpeed = 1500; // going a little faster
-	int rampTime    = 1500; // 1.5 seconds
-	
-        std::cout << "Starting Ramped Rotation..." << std::endl;
+        // 2. Power up the coils
+        focuser.setPower(true);
+        rotator.setPower(true);
+        std::cout << "Motors energized and holding position." << std::endl;
 
-	// 1. Smooth Start
-        // Ramp up to 1500Hz over 1.5 seconds
-        rotator.moveRamped(targetSpeed, rampTime, CW);
+        // --- FORWARD SEQUENCE ---
+        std::cout << "Starting Forward Move (5 seconds)..." << std::endl;
+        
+        // We use moveAtHz so they both start nearly simultaneously
+        // Focuser at 1280Hz (2 revs), Rotator at 640Hz (1 rev)
+        focuser.moveAtHz(1280, CW);
+        rotator.moveAtHz(640, CW);
 
-	// 2. Cruise
-        std::cout << "Cruising at target speed..." << std::endl;
-        sleep(2); 
+        sleep(5); // Wait for the 5-second duration
 
-	// 3. Smooth Stop
-	
-        rotator.stopRamped(targetSpeed, rampTime);
+        focuser.stop();
+        rotator.stop();
+        std::cout << "Move complete. Resting for 2 seconds..." << std::endl;
+
+        // 3. Pause
+        sleep(2);
+
+        // --- REVERSE SEQUENCE ---
+        std::cout << "Starting Reverse Move (5 seconds)..." << std::endl;
+        
+        focuser.moveAtHz(1280, CCW);
+        rotator.moveAtHz(640, CCW);
+
+        sleep(5);
+
+        focuser.stop();
+        rotator.stop();
+        
+        // 4. Power down to keep the stepper motors and HAT cool
+        focuser.setPower(false);
         rotator.setPower(false);
-    } // SCOPE END: Destructors run here
+        std::cout << "Sequence finished. Motors powered down." << std::endl;
+    }
 
     gpioTerminate();
     return 0;

@@ -1,5 +1,5 @@
 #include "WaveShareStepper.hpp"
-#include <iostream> // Added for std::cout
+#include <iostream>
 
 WaveShareStepper::WaveShareStepper(MotorChannel channel) {
     if (channel == MOTOR_1) {
@@ -24,41 +24,46 @@ void WaveShareStepper::setPower(bool on) {
 
 void WaveShareStepper::moveAtHz(int frequency, Direction dir) {
     if (!_is_enabled) setPower(true);
-    gpioWrite(_dir, (int)dir);
-    gpioHardwarePWM(_step, frequency, 500000); 
+    _currentHz = frequency;
+    _currentDir = dir;
+    gpioWrite(_dir, (int)_currentDir);
+    gpioHardwarePWM(_step, _currentHz, 500000); 
 }
 
 void WaveShareStepper::stop() {
     gpioHardwarePWM(_step, 0, 0);
+    _currentHz = 0;
 }
 
 void WaveShareStepper::moveRamped(int targetHz, int rampTimeMs, Direction dir) {
     if (!_is_enabled) setPower(true);
-    gpioWrite(_dir, (int)dir);
+    _currentDir = dir;
+    gpioWrite(_dir, (int)_currentDir);
 
     int steps = 20; 
     int freqStep = targetHz / steps;
-    int delayUs = (rampTimeMs * 1000) / steps; // Convert ms to microseconds for gpioDelay
+    int delayUs = (rampTimeMs * 1000) / steps;
 
-    std::cout << "Ramping up speed..." << std::endl;
     for (int i = 1; i <= steps; i++) {
-        gpioHardwarePWM(_step, i * freqStep, 500000);
+        _currentHz = i * freqStep;
+        gpioHardwarePWM(_step, _currentHz, 500000);
         gpioDelay(delayUs); 
     }
 }
 
-void WaveShareStepper::stopRamped(int currentHz, int rampTimeMs) {
+void WaveShareStepper::stopRamped(int rampTimeMs) {
+    if (_currentHz == 0) return; // Already stopped
+
     int steps = 20; 
-    int freqStep = currentHz / steps;
+    int startHz = _currentHz;
+    int freqStep = startHz / steps;
     int delayUs = (rampTimeMs * 1000) / steps;
 
-    std::cout << "Ramping down speed..." << std::endl;
     for (int i = steps; i >= 1; i--) {
-        gpioHardwarePWM(_step, i * freqStep, 500000);
+        _currentHz = i * freqStep;
+        gpioHardwarePWM(_step, _currentHz, 500000);
         gpioDelay(delayUs);
     }
 
-    // Final hard stop to ensure PWM is totally off
-    stop();
+    stop(); // Ensures _currentHz is exactly 0 and PWM is off
 }
-
