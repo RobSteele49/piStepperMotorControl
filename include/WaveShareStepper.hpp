@@ -1,3 +1,12 @@
+/*
+ * Project:   LX200 Focuser Automation
+ * Component: WaveShare Stepper Driver Interface (Header)
+ * Author:    Robert D. Steele
+ * Date:      2026-02-18
+ * Version:   1.4
+ * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
+ */
+
 #ifndef WAVESHARE_STEPPER_HPP
 #define WAVESHARE_STEPPER_HPP
 
@@ -11,21 +20,17 @@ public:
     WaveShareStepper(MotorChannel channel);
     ~WaveShareStepper();
 
-    // Power and Stop
     void setPower(bool on);
     void stop();
     
-    // Movement Logic
-    void moveAtHz(int frequency, Direction dir);             // Non-blocking
+    void moveAtHz(int frequency, Direction dir);           // Non-blocking (Hardware PWM)
     void moveSteps(int steps, int speedHz, Direction dir);   // Blocking
     void moveTo(long long targetPosition, int speedHz);      // Absolute move
     void moveRelative(long long offset, int speedHz);        // Relative move
 
-    // Smooth movement (Ramping)
     void moveRamped(int targetHz, int rampTimeMs, Direction dir);
     void stopRamped(int rampTimeMs);
 
-    // Position State Getters/Setters
     long long getPosition() const { return _stepPosition; }
     void setCurrentPosition(long long pos) { _stepPosition = pos; }
     int getCurrentHz() const { return _currentHz; }
@@ -34,7 +39,6 @@ public:
 private:
     int _en, _dir, _step;
     bool _is_enabled = false;
-    
     int _currentHz = 0;
     Direction _currentDir = CW;
     long long _stepPosition = 0; 

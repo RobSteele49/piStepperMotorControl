@@ -1,26 +1,31 @@
 cmake_minimum_required(VERSION 3.10)
-project(TelescopeControl)
+project(PiStepperControl)
 
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# 1. Tell CMake where the header files are (.hpp)
 include_directories(include)
 
+# 2. Find the necessary Raspberry Pi libraries
 find_library(PIGPIO_LIB pigpio)
 find_library(PTHREAD_LIB pthread)
+find_library(RT_LIB rt)
 
-# --- TEST UTILITIES ---
-# This helper function links the stepper class to your test files
-function(add_test_tool name source)
-    add_executable(${name} ${source} src/WaveShareStepper.cpp)
-    target_link_libraries(${name} ${PIGPIO_LIB} ${PTHREAD_LIB} rt)
-endfunction()
+# 3. Create the WaveShare Library from the source folder
+# Note the "src/" prefix
+add_library(WaveShareStepper src/WaveShareStepper.cpp)
 
-# 1. The original "Main" logic moved to test/
-add_test_tool(dual_motor_test test/dual_motor_test.cpp)
+# 4. Executables (Main Tests)
+add_executable(StepperRotateV1 src/StepperRotateV1.cpp)
+target_link_libraries(StepperRotateV1 WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
 
-# 2. Your Zeroing utility
-add_test_tool(zero_focuser test/zero_focuser.cpp)
+# 5. Executables (Sub-folder Tests)
+# Note the "test/" prefix
+add_executable(DualMotorTest test/DualMotorTest.cpp)
+target_link_libraries(DualMotorTest WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
 
-#3. Backlash check utility
-add_test_tool(backlash_check test/backlash_check.cpp)
+add_executable(ZeroFocuser test/ZeroFocuser.cpp)
+target_link_libraries(ZeroFocuser WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+
+add_executable(BacklashCheck test/BacklashCheck.cpp)
+target_link_libraries(BacklashCheck WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
