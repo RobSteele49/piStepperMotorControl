@@ -32,3 +32,7 @@ target_link_libraries(BacklashCheck WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB
 
 add_executable(FocuserMaxSpeed test/FocuserMaxSpeed.cpp)
 target_link_libraries(FocuserMaxSpeed WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+
+add_executable(SlowRotationTest test/SlowRotationTest.cpp)
+target_link_libraries(SlowRotationTest WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+
