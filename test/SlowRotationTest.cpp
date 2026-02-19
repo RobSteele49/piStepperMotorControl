@@ -4,7 +4,7 @@
  * File:      SlowRotationTest.cpp
  * Author:    Robert D. Steele
  * Date:      2026-02-19
- * Version:   1.0
+ * Version:   1.2
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -25,6 +25,9 @@ void safety_shutdown(int sig) {
     exit(0);
 }
 
+// Math: 1 Knob Rev / 30 Seconds = STEPS_PER_KNOB_REV / 30
+const int TARGET_HZ = STEPS_PER_KNOB_REV / 30;
+
 int main() {
     if (gpioInitialise() < 0) return 1;
     signal(SIGINT, safety_shutdown);
@@ -34,22 +37,19 @@ int main() {
         g_focuser = &focuser;
         focuser.setPower(true);
 
-        // 1 Knob Rev = 3 Motor Revs = 38,400 steps.
-        // 38,400 steps over 30 seconds = 1280 Hz.
-        int totalSteps = 38400;
-        int targetSpeedHz = 1280;
-        int rampMs = 2000; // Extra long 2-second ramp for maximum smoothness
-
         std::cout << "--- Robert D. Steele: Slow Rotation Test ---" << std::endl;
         
         std::cout << "Phase 1: 1 Knob Rev CCW (30 Seconds)..." << std::endl;
-        focuser.moveStepsRamped(totalSteps, targetSpeedHz, rampMs, CCW);
-
+	// Use constants from config.h
+        focuser.moveStepsRamped(STEPS_PER_KNOB_REV, TARGET_HZ, DEFAULT_RAMP_MS, CCW);
+	
         std::cout << "Pausing 5 seconds..." << std::endl;
+
         sleep(5);
 
         std::cout << "Phase 2: 1 Knob Rev CW (30 Seconds)..." << std::endl;
-        focuser.moveStepsRamped(totalSteps, targetSpeedHz, rampMs, CW);
+
+	focuser.moveStepsRamped(STEPS_PER_KNOB_REV, TARGET_HZ, DEFAULT_RAMP_MS, CW);
 
         focuser.setPower(false);
         std::cout << "Test Complete. Motor Released." << std::endl;

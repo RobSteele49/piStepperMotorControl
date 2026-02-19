@@ -3,7 +3,7 @@
  * Component: WaveShare Stepper Driver Interface (Header)
  * Author:    Robert D. Steele
  * Date:      2026-02-18
- * Version:   1.4
+ * Version:   1.5
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -11,6 +11,7 @@
 #define WAVESHARE_STEPPER_HPP
 
 #include <pigpio.h>
+#include "config.h" // Motor configuration file
 
 enum MotorChannel { MOTOR_1, MOTOR_2 };
 enum Direction { CW = 1, CCW = 0 };

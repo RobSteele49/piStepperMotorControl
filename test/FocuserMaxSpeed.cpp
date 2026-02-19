@@ -4,7 +4,7 @@
  * File:      FocuserMaxSpeed.cpp
  * Author:    Robert D. Steele
  * Date:      2026-02-19
- * Version:   1.1
+ * Version:   1.2
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -34,27 +34,24 @@ int main() {
         g_focuser = &focuser;
         focuser.setPower(true);
 
-        // Math for 3 Knob Revolutions @ 6s/rev
-        // 1:3 Ratio -> 9 Motor Revolutions
-        // Total steps = 115,200 | Target Speed = 6400 Hz
-        int totalSteps = 115200;
-        int targetSpeedHz = 6400;
-        int rampMs = 1000; // 1 second ramp is very gentle for SCT mirrors
-
-        std::cout << "--- Robert D. Steele: Ramped High Speed Test ---" << std::endl;
-        std::cout << "Target: 6 seconds per knob revolution." << std::endl;
-
+	// Target: 3 Knob Revolutions
+        int totalSteps = STEPS_PER_KNOB_REV * 3;
+	
+	std::cout << "--- High Speed Test (Using Config.h) ---" << std::endl;
+	
         // Phase 1: CCW (Inward/Down)
         std::cout << "Phase 1: 3 Knob Revs COUNTER-CLOCKWISE (Ramped)..." << std::endl;
-        focuser.moveStepsRamped(totalSteps, targetSpeedHz, rampMs, CCW);
+
+	focuser.moveStepsRamped(totalSteps, SPEED_MAX, DEFAULT_RAMP_MS, CCW);
 
         std::cout << "Pausing 5 seconds for mechanical settling..." << std::endl;
         sleep(5);
 
         // Phase 2: CW (Outward/Up)
         std::cout << "Phase 2: 3 Knob Revs CLOCKWISE (Ramped)..." << std::endl;
-        focuser.moveStepsRamped(totalSteps, targetSpeedHz, rampMs, CW);
 
+	focuser.moveStepsRamped(totalSteps, SPEED_MAX, DEFAULT_RAMP_MS, CW);
+	
         focuser.setPower(false);
         std::cout << "Test Complete. All movement was ramped. Motor Released." << std::endl;
     }
