@@ -29,3 +29,6 @@ target_link_libraries(ZeroFocuser WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} 
 
 add_executable(BacklashCheck test/BacklashCheck.cpp)
 target_link_libraries(BacklashCheck WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+
+add_executable(FocuserMaxSpeed test/FocuserMaxSpeed.cpp)
+target_link_libraries(FocuserMaxSpeed WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})

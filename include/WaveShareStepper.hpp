@@ -25,6 +25,7 @@ public:
     
     void moveAtHz(int frequency, Direction dir);           // Non-blocking (Hardware PWM)
     void moveSteps(int steps, int speedHz, Direction dir);   // Blocking
+    void moveStepsRamped(int totalSteps, int targetHz, int rampTimeMs, Direction dir); 
     void moveTo(long long targetPosition, int speedHz);      // Absolute move
     void moveRelative(long long offset, int speedHz);        // Relative move
 
