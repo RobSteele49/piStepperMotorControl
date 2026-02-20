@@ -16,8 +16,8 @@ find_library(RT_LIB rt)
 add_library(WaveShareStepper src/WaveShareStepper.cpp)
 
 # 4. Executables (Main Tests)
-add_executable(StepperRotateV1 src/StepperRotateV1.cpp)
-target_link_libraries(StepperRotateV1 WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+add_executable(LX200_FocuserControl src/LX200_FocuserControl.cpp)
+target_link_libraries(LX200_FocuserControl WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
 
 # 5. Executables (Sub-folder Tests)
 # Note the "test/" prefix

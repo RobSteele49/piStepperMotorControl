@@ -4,12 +4,14 @@
  * File:      config.h
  * Author:    Robert D. Steele
  * Date:      2026-02-19
- * Version:   1.0
+ * Version:   1.1
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
 #ifndef CONFIG_H
 #define CONFIG_H
+
+enum Direction { CW = 0, CCW = 1 };
 
 // --- Hardware Physical Constants ---
 const float GEAR_RATIO           = 3.0f;  // 1:3 Gear reduction
@@ -30,5 +32,14 @@ const int SPEED_MAX              = 6400;  // High-speed transit (6s/knob rev)
 
 // --- Safety & Ramping ---
 const int DEFAULT_RAMP_MS        = 1000;  // 1 second acceleration
+
+// --- Backlash Compensation ---
+// The direction that "pushes" the mirror against the tension of the screw
+const Direction PREFERRED_DIRECTION = CW; 
+
+// The number of steps the motor turns before the mirror actually starts moving.
+// Adjust this based on your BacklashCheck results.
+const int BACKLASH_STEPS = 650; 
+
 
 #endif // CONFIG_H

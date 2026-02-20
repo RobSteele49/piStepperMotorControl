@@ -4,7 +4,7 @@
  * File:      WaveShareStepper.cpp
  * Author:    Robert D. Steele
  * Date:      2026-02-19
- * Version:   1.8
+ * Version:   2.2 (Backlash Compensation)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -126,7 +126,61 @@ void WaveShareStepper::moveRelative(long long offset, int speedHz) {
 }
 
 void WaveShareStepper::moveTo(long long targetPosition, int speedHz) {
-    long long distanceToMove = targetPosition - _stepPosition;
-    if (distanceToMove == 0) return;
-    moveRelative(distanceToMove, speedHz);
+    long long distance = targetPosition - _stepPosition;
+    
+    if (distance == 0) return;
+
+    Direction targetDir = (distance > 0) ? CW : CCW;
+
+    if (targetDir == PREFERRED_DIRECTION) {
+        // We are already moving in the preferred direction. 
+        // No compensation needed. Just move smoothly to the target.
+        moveStepsRamped(std::abs(distance), speedHz, DEFAULT_RAMP_MS, targetDir);
+    } 
+    else {
+        // We are moving in the "wrong" direction. 
+        // 1. Over-travel past the target by the backlash amount.
+        long long overTravelDistance = std::abs(distance) + BACKLASH_STEPS;
+        std::cout << "[Backlash] Over-travelling to take up slack..." << std::endl;
+        moveStepsRamped(overTravelDistance, speedHz, DEFAULT_RAMP_MS, targetDir);
+
+        // 2. Reverse back to the exact target in the PREFERRED direction.
+        // We do this slightly slower for high precision.
+        moveStepsRamped(BACKLASH_STEPS, speedHz / 2, 500, PREFERRED_DIRECTION);
+    }
+}
+
+void WaveShareStepper::reSeat() {
+    std::cout << "[RE-SEAT] Normalizing mirror tension..." << std::endl;
+    
+    // 1. Determine the 'wrong' direction
+    Direction oppositeDir = (PREFERRED_DIRECTION == CW) ? CCW : CW;
+
+    // 2. Move out of the seat (backwards) slightly more than the backlash amount
+    int movement = BACKLASH_STEPS * 2;
+    moveStepsRamped(movement, SPEED_MED, 500, oppositeDir);
+
+    // 3. Move back into the seat in the PREFERRED direction
+    moveStepsRamped(movement, SPEED_MED, 500, PREFERRED_DIRECTION);
+    
+    std::cout << "[RE-SEAT] Mirror seated against focus screw." << std::endl;
+}
+
+void WaveShareStepper::globalEmergencyStop(WaveShareStepper* m1, WaveShareStepper* m2) {
+    std::cout << "\n[EMERGENCY STOP] Hardware shutdown initiated..." << std::endl;
+    if (m1) {
+        m1->stop();
+        m1->setPower(false);
+    }
+    if (m2) {
+        m2->stop();
+        m2->setPower(false);
+    }
+    gpioTerminate();
+    std::cout << "[SAFE] System halted. Exiting." << std::endl;
+    exit(0);
+}
+
+long long WaveShareStepper::getCurrentPosition() {
+    return _stepPosition;
 }

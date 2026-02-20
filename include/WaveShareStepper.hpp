@@ -3,7 +3,7 @@
  * Component: WaveShare Stepper Driver Interface (Header)
  * Author:    Robert D. Steele
  * Date:      2026-02-18
- * Version:   1.5
+ * Version:   1.6
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -14,7 +14,6 @@
 #include "config.h" // Motor configuration file
 
 enum MotorChannel { MOTOR_1, MOTOR_2 };
-enum Direction { CW = 1, CCW = 0 };
 
 class WaveShareStepper {
 public:
@@ -30,6 +29,8 @@ public:
     void moveTo(long long targetPosition, int speedHz);      // Absolute move
     void moveRelative(long long offset, int speedHz);        // Relative move
 
+    void reSeat(); // Add this line in the public: section
+  
     void moveRamped(int targetHz, int rampTimeMs, Direction dir);
     void stopRamped(int rampTimeMs);
 
@@ -38,6 +39,11 @@ public:
     int getCurrentHz() const { return _currentHz; }
     bool isMoving() const { return _currentHz > 0; }
 
+    long long getCurrentPosition();
+  
+    // Static method: can be called without an object to kill everything
+    static void globalEmergencyStop(WaveShareStepper* m1, WaveShareStepper* m2 = nullptr);
+  
 private:
     int _en, _dir, _step;
     bool _is_enabled = false;
