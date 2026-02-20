@@ -4,8 +4,10 @@
  * File:      WaveShareStepper.cpp
  * Author:    Robert D. Steele
  * Date:      2026-02-19
- * Version:   2.2 (Backlash Compensation)
+ * Version:   2.3
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
+ * Version 2.3 Update moveTo logic to incorporate MAX_LIMIT_STEPS
+ * and MIN_LIMIT_STEPS
  */
 
 #include "WaveShareStepper.hpp"
@@ -73,7 +75,18 @@ void WaveShareStepper::moveSteps(int steps, int speedHz, Direction dir) {
 }
 
 // NEW: Sophisticated Ramped Move (Acceleration -> Cruise -> Deceleration)
+// Updated with MAX_LIMIT_STEPS and MIN_LIMIT_STEPS
+
 void WaveShareStepper::moveStepsRamped(int totalSteps, int targetHz, int rampTimeMs, Direction dir) {
+    // 1. Calculate where we WOULD end up
+    long long projectedPos = _stepPosition + (dir == CW ? totalSteps : -totalSteps);
+
+    // 2. Check boundaries
+    if (projectedPos > MAX_LIMIT_STEPS || projectedPos < MIN_LIMIT_STEPS) {
+        std::cout << "[SAFETY] Move blocked: Destination exceeds Soft Limits." << std::endl;
+        return; 
+    }
+
     if (!_is_enabled) setPower(true);
     _currentDir = dir;
     gpioWrite(_dir, (int)_currentDir);
@@ -125,9 +138,19 @@ void WaveShareStepper::moveRelative(long long offset, int speedHz) {
     moveSteps(std::abs(offset), speedHz, dir);
 }
 
+//**
 void WaveShareStepper::moveTo(long long targetPosition, int speedHz) {
+    // 1. Boundary Check
+    if (targetPosition > MAX_LIMIT_STEPS) {
+        std::cout << "[LIMIT] Capping target to MAX_LIMIT." << std::endl;
+        targetPosition = MAX_LIMIT_STEPS;
+    }
+    if (targetPosition < MIN_LIMIT_STEPS) {
+        std::cout << "[LIMIT] Capping target to MIN_LIMIT." << std::endl;
+        targetPosition = MIN_LIMIT_STEPS;
+    }
+
     long long distance = targetPosition - _stepPosition;
-    
     if (distance == 0) return;
 
     Direction targetDir = (distance > 0) ? CW : CCW;

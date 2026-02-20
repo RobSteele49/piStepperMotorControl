@@ -4,7 +4,7 @@
  * File:      config.h
  * Author:    Robert D. Steele
  * Date:      2026-02-19
- * Version:   1.1
+ * Version:   1.2
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -41,5 +41,10 @@ const Direction PREFERRED_DIRECTION = CW;
 // Adjust this based on your BacklashCheck results.
 const int BACKLASH_STEPS = 650; 
 
+// --- Soft Limits ---
+// Let's assume a total safe travel of 20 revolutions from the zero point.
+// This prevents the mirror from traveling too far in either direction.
+const long long MAX_LIMIT_STEPS = (long long)(STEPS_PER_KNOB_REV * 20);
+const long long MIN_LIMIT_STEPS = (long long)(STEPS_PER_KNOB_REV * -20);
 
 #endif // CONFIG_H
