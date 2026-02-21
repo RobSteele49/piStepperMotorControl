@@ -4,7 +4,7 @@
  * File:      WaveShareStepper.cpp
  * Author:    Robert D. Steele
  * Date:      2026-02-20
- * Version:   2.11 Persistant Storage and update to reSeat
+ * Version:   2.12 Implemented syncPosition
  */
 
 #include "WaveShareStepper.hpp"
@@ -180,3 +180,10 @@ void WaveShareStepper::loadPosition() {
         std::cout << "[PERSISTENCE] No saved position found. Starting at 0." << std::endl;
     }
 }
+
+void WaveShareStepper::syncPosition(long long newPos) {
+    _stepPosition = newPos;
+    savePosition(); // Persist the change to disk
+    std::cout << "[SYNC] Software recalibrated. Current position is now: " << _stepPosition << std::endl;
+}
+

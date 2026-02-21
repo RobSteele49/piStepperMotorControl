@@ -1,9 +1,10 @@
 /*
  * Project:   LX200 Focuser Automation
  * Component: WaveShare Stepper Driver Interface (Header)
+ * File:      WaveShareStepper.hpp
  * Author:    Robert D. Steele
  * Date:      2026-02-19
- * Version:   2.9 Implementing save and load position
+ * Version:   2.10 Implementing syncPosition
  */
 
 #ifndef WAVESHARE_STEPPER_HPP
@@ -34,7 +35,8 @@ public:
     void reSeat();
     void savePosition(); // Now public so you can force a save if needed
     void loadPosition();
-
+    void syncPosition(long long newPos);
+  
     long long getCurrentPosition();
     void setCurrentPosition(long long pos) { _stepPosition = pos; }
 

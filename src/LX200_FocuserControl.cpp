@@ -5,7 +5,7 @@
  * Author:    Robert D. Steele
  * Date:      2026-02-19
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
- * Version:   2.4 (Added 5-Rev Coarse Moves)
+ * Version:   2.6 (Resolved 'S' key conflict, added Sync and Auto-Save)
  */
 
 #include <iostream>
@@ -21,7 +21,6 @@ void signal_handler(int sig) {
     WaveShareStepper::globalEmergencyStop(g_focuser);
 }
 
-// Preset Management
 std::map<int, long long> presets;
 const std::string PRESET_FILE = "focuser_presets.txt";
 
@@ -36,20 +35,16 @@ void loadPresets() {
     while (in >> slot >> pos) presets[slot] = pos;
 }
 
-void checkTemperatureCompensation(WaveShareStepper& focuser) {
-    std::cout << "[TEMP] Logic Placeholder: No sensor detected." << std::endl;
-}
-
 void printMenu() {
     std::cout << "\n----------------------------------------" << std::endl;
-    std::cout << " LX200 COMMAND CENTER (v2.4)" << std::endl;
+    std::cout << " LX200 COMMAND CENTER (v2.6)" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
     std::cout << " IN (CCW):  [1] 0.1 Rev | [2] 1.0 Rev | [3] 5.0 Rev" << std::endl;
     std::cout << " OUT (CW):  [4] 0.1 Rev | [5] 1.0 Rev | [6] 5.0 Rev" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
     std::cout << " S: Save Preset   | L: Load Preset" << std::endl;
-    std::cout << " R: Re-Seat Mirror| T: Temp Check" << std::endl;
-    std::cout << " Z: Zero Position | Q: Quit" << std::endl;
+    std::cout << " Y: Sync Position | R: Re-Seat Mirror" << std::endl;
+    std::cout << " Z: Zero (0)      | Q: Quit" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
     std::cout << "Selection: ";
 }
@@ -65,7 +60,7 @@ int main() {
 
         char choice;
         while (true) {
-            std::cout << "\nSTATUS: Position [" << focuser.getCurrentPosition() << "]";
+            std::cout << "\nSTATUS: Current Position [" << focuser.getCurrentPosition() << "]";
             printMenu();
             std::cin >> choice;
             choice = toupper(choice);
@@ -73,12 +68,9 @@ int main() {
             if (choice == 'Q') break;
 
             switch (choice) {
-                // INWARD MOVES (CCW)
                 case '1': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 0.1, SPEED_MED, 500, CCW); break;
                 case '2': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 1.0, SPEED_MAX, DEFAULT_RAMP_MS, CCW); break;
                 case '3': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 5.0, SPEED_MAX, DEFAULT_RAMP_MS, CCW); break;
-                
-                // OUTWARD MOVES (CW)
                 case '4': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 0.1, SPEED_MED, 500, CW); break;
                 case '5': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 1.0, SPEED_MAX, DEFAULT_RAMP_MS, CW); break;
                 case '6': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 5.0, SPEED_MAX, DEFAULT_RAMP_MS, CW); break;
@@ -87,16 +79,24 @@ int main() {
                     int slot; std::cout << "Save to Slot (1-5): "; std::cin >> slot;
                     presets[slot] = focuser.getCurrentPosition();
                     savePresets();
+                    std::cout << "Preset " << slot << " saved." << std::endl;
                     break;
                 }
                 case 'L': {
                     int slot; std::cout << "Go to Slot: "; std::cin >> slot;
                     if (presets.count(slot)) focuser.moveTo(presets[slot], SPEED_MAX);
+                    else std::cout << "Slot empty!" << std::endl;
+                    break;
+                }
+                case 'Y': {
+                    long long syncPos;
+                    std::cout << "Enter actual physical position to sync to: ";
+                    std::cin >> syncPos;
+                    focuser.syncPosition(syncPos);
                     break;
                 }
                 case 'R': focuser.reSeat(); break;
-                case 'T': checkTemperatureCompensation(focuser); break;
-                case 'Z': focuser.setCurrentPosition(0); break;
+                case 'Z': focuser.syncPosition(0); break;
                 
                 default: std::cout << "Invalid Option." << std::endl;
             }
@@ -106,3 +106,4 @@ int main() {
     gpioTerminate();
     return 0;
 }
+
