@@ -49,3 +49,7 @@ target_link_libraries(HardwareProbe WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB
 
 add_executable(BacklashWizard test/BacklashWizard.cpp)
 target_link_libraries(BacklashWizard WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+
+add_executable(ReSeatMirror test/ReSeatMirror.cpp)
+target_link_libraries(ReSeatMirror WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+

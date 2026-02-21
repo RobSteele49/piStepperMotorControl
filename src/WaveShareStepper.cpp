@@ -4,7 +4,7 @@
  * File:      WaveShareStepper.cpp
  * Author:    Robert D. Steele
  * Date:      2026-02-20
- * Version:   2.9 Added back moveSteps
+ * Version:   2.10 reSeat function
  */
 
 #include "WaveShareStepper.hpp"
@@ -138,9 +138,22 @@ void WaveShareStepper::moveTo(long long targetPosition, int speedHz) {
 }
 
 void WaveShareStepper::reSeat() {
-    Direction oppositeDir = (PREFERRED_DIRECTION == CW) ? CCW : CW;
-    moveStepsRamped(BACKLASH_STEPS * 2, SPEED_MED, 500, oppositeDir);
-    moveStepsRamped(BACKLASH_STEPS * 2, SPEED_MED, 500, PREFERRED_DIRECTION);
+    // 1. Identify directions
+    Direction pushDir = PREFERRED_DIRECTION; 
+    Direction pullDir = (PREFERRED_DIRECTION == CW) ? CCW : CW;
+
+    std::cout << "\n[RE-SEATING] Stabilization sequence started..." << std::endl;
+
+    // 2. Move AWAY from the preferred seat by 2x the backlash
+    // This ensures we have completely uncoupled the screw from the mirror.
+    int overshoot = BACKLASH_STEPS * 2;
+    moveStepsRamped(overshoot, SPEED_MED, 500, pullDir);
+
+    // 3. Move BACK into the preferred seat
+    // This "lands" the mirror firmly against the tension spring.
+    moveStepsRamped(overshoot, SPEED_SLOW, 500, pushDir);
+
+    std::cout << "[RE-SEATING] Mirror is now pinned and stable." << std::endl;
 }
 
 void WaveShareStepper::globalEmergencyStop(WaveShareStepper* m1, WaveShareStepper* m2) {
