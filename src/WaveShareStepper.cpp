@@ -4,7 +4,7 @@
  * File:      WaveShareStepper.cpp
  * Author:    Robert D. Steele
  * Date:      2026-02-20
- * Version:   2.10 reSeat function
+ * Version:   2.11 Persistant Storage and update to reSeat
  */
 
 #include "WaveShareStepper.hpp"
@@ -138,26 +138,45 @@ void WaveShareStepper::moveTo(long long targetPosition, int speedHz) {
 }
 
 void WaveShareStepper::reSeat() {
-    // 1. Identify directions
     Direction pushDir = PREFERRED_DIRECTION; 
-    Direction pullDir = (PREFERRED_DIRECTION == CW) ? CCW : CW;
+    Direction pullDir = (pushDir == CW) ? CCW : CW;
 
-    std::cout << "\n[RE-SEATING] Stabilization sequence started..." << std::endl;
+    std::cout << "\n[RE-SEATING] Clearing backlash and pinning mirror..." << std::endl;
 
-    // 2. Move AWAY from the preferred seat by 2x the backlash
-    // This ensures we have completely uncoupled the screw from the mirror.
+    // 1. Pull away relatively quickly to clear the mechanical gap
     int overshoot = BACKLASH_STEPS * 2;
     moveStepsRamped(overshoot, SPEED_MED, 500, pullDir);
 
-    // 3. Move BACK into the preferred seat
-    // This "lands" the mirror firmly against the tension spring.
-    moveStepsRamped(overshoot, SPEED_SLOW, 500, pushDir);
+    // 2. Push back slowly to seat the mirror against the spring tension
+    // We use SPEED_SLOW here for maximum torque and precision.
+    moveStepsRamped(overshoot, SPEED_SLOW, 1000, pushDir);
 
-    std::cout << "[RE-SEATING] Mirror is now pinned and stable." << std::endl;
+    savePosition(); // Ensure this stable spot is remembered
+    std::cout << "[RE-SEATING] Complete. Position saved." << std::endl;
 }
 
 void WaveShareStepper::globalEmergencyStop(WaveShareStepper* m1, WaveShareStepper* m2) {
     if (m1) m1->stop(); if (m2) m2->stop();
     gpioTerminate();
     exit(0);
+}
+
+void WaveShareStepper::savePosition() {
+    std::ofstream posFile("last_position.txt");
+    if (posFile.is_open()) {
+        posFile << _stepPosition;
+        posFile.close();
+    }
+}
+
+void WaveShareStepper::loadPosition() {
+    std::ifstream posFile("last_position.txt");
+    if (posFile.is_open()) {
+        posFile >> _stepPosition;
+        posFile.close();
+        std::cout << "[PERSISTENCE] Loaded last position: " << _stepPosition << std::endl;
+    } else {
+        _stepPosition = 0; // Default if file doesn't exist
+        std::cout << "[PERSISTENCE] No saved position found. Starting at 0." << std::endl;
+    }
 }

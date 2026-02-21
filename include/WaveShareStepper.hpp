@@ -3,7 +3,7 @@
  * Component: WaveShare Stepper Driver Interface (Header)
  * Author:    Robert D. Steele
  * Date:      2026-02-19
- * Version:   2.8
+ * Version:   2.9 Implementing save and load position
  */
 
 #ifndef WAVESHARE_STEPPER_HPP
@@ -31,7 +31,9 @@ public:
     void moveSteps(int steps, int freq, Direction dir); // <--- RESTORED for BacklashCheck
     void moveTo(long long targetPosition, int speedHz);      
     void moveRelative(long long offset, int speedHz);        
-    void reSeat(); 
+    void reSeat();
+    void savePosition(); // Now public so you can force a save if needed
+    void loadPosition();
 
     long long getCurrentPosition();
     void setCurrentPosition(long long pos) { _stepPosition = pos; }
