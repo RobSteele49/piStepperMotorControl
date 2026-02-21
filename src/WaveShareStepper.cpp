@@ -1,6 +1,7 @@
 /*
  * Project:   LX200 Focuser Automation
  * Component: WaveShare Stepper Driver Interface (Implementation)
+ * File:      WaveShareStepper.cpp
  * Author:    Robert D. Steele
  * Date:      2026-02-20
  * Version:   2.9 Added back moveSteps
@@ -72,10 +73,7 @@ void WaveShareStepper::moveSteps(int steps, int freq, Direction dir) {
     moveStepsRamped(steps, freq, 50, dir);
 }
 
-
 void WaveShareStepper::moveStepsRamped(int totalSteps, int targetHz, int rampTimeMs, Direction dir) {
-    // SAFETY BYPASS: If totalSteps is > 500,000, we assume we are "Homing" 
-    // and ignore the software limits.
     bool isHoming = (totalSteps > 500000);
 
     if (!isHoming) {
@@ -88,12 +86,23 @@ void WaveShareStepper::moveStepsRamped(int totalSteps, int targetHz, int rampTim
 
     if (!_is_enabled) setPower(true);
     gpioWrite(_dir, (dir == CW ? PI_HIGH : PI_LOW));
+    
+    // Small delay to let the driver wake up
+    gpioDelay(2000); 
 
-    double currentHz = 200.0; // Reliable start speed
+    double currentHz = 200.0; 
+    // Calculate how much to increase Hz per step to reach target in 1/8th of the trip
+    double accelStep = (double)(targetHz - 200) / (totalSteps / 8.0);
+
     for (int i = 0; i < totalSteps; i++) {
-        // Ramping logic
-        if (i < (totalSteps / 8) && currentHz < targetHz) currentHz += 4.0;
-        else if (i > (7 * totalSteps / 8) && currentHz > 250) currentHz -= 4.0;
+        // Accelerate for first 12.5% of trip
+        if (i < (totalSteps / 8) && currentHz < targetHz) {
+            currentHz += accelStep;
+        } 
+        // Decelerate for last 12.5% of trip
+        else if (i > (7 * totalSteps / 8) && currentHz > 250) {
+            currentHz -= accelStep;
+        }
 
         gpioWrite(_step, PI_HIGH);
         gpioDelay(static_cast<uint32_t>(500000.0 / currentHz));
@@ -102,8 +111,8 @@ void WaveShareStepper::moveStepsRamped(int totalSteps, int targetHz, int rampTim
 
         _stepPosition += (dir == CW ? 1 : -1);
 
-        if (i % 250 == 0 || i == totalSteps - 1) {
-            std::cout << "\r[MOVING] Pos: " << std::setw(8) << _stepPosition << " | " << std::flush;
+        if (i % 500 == 0 || i == totalSteps - 1) {
+            std::cout << "\r[MOVING] Pos: " << std::setw(8) << _stepPosition << " @ " << (int)currentHz << "Hz   " << std::flush;
         }
     }
     std::cout << " [DONE]" << std::endl;

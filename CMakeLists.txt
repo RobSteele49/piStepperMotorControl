@@ -1,3 +1,11 @@
+
+# Project:   LX200 Focuser Automation
+# Component: WaveShare Stepper Driver Interface (Implementation)
+# File:      CMakeLists.txt
+# Author:    Robert D. Steele
+# Date:      2026-02-20
+# Version:   1.0 First version with a version number
+
 cmake_minimum_required(VERSION 3.10)
 project(PiStepperControl)
 
@@ -36,3 +44,8 @@ target_link_libraries(FocuserMaxSpeed WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_L
 add_executable(SlowRotationTest test/SlowRotationTest.cpp)
 target_link_libraries(SlowRotationTest WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
 
+add_executable(HardwareProbe test/HardwareProbe.cpp)
+target_link_libraries(HardwareProbe WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+
+add_executable(BacklashWizard test/BacklashWizard.cpp)
+target_link_libraries(BacklashWizard WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
