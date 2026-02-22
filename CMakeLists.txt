@@ -53,3 +53,9 @@ target_link_libraries(BacklashWizard WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LI
 add_executable(ReSeatMirror test/ReSeatMirror.cpp)
 target_link_libraries(ReSeatMirror WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
 
+add_executable(Motor1Test test/Motor1Test.cpp)
+target_link_libraries(Motor1Test ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+
+add_executable(Motor2Test test/Motor2Test.cpp)
+target_link_libraries(Motor2Test ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+
