@@ -1,44 +1,55 @@
 # -------------------------
-# Build artifacts
+# Build artifacts 
 # -------------------------
-build/
-CMakeFiles/
-CMakeCache.txt
-cmake_install.cmake
-Makefile
-*.cmake
-focuserd
+build/ 
+CMakeFiles/ 
+CMakeCache.txt 
+cmake_install.cmake 
+Makefile 
+*.cmake 
+focuserd 
+*.o
+*.out
+*.so
 
 # -------------------------
-# Backup / editor temp files
+# Obsidian Vault Sync Protection
 # -------------------------
-*~
-\#*\#
-*.swp
-*.swo
-*.bak
+docs/ObsidianDocuments/.obsidian/workspace.json
+docs/ObsidianDocuments/.obsidian/workspace-mobile.json
+docs/ObsidianDocuments/.obsidian/plugins/obsidian-git/data.json
+docs/ObsidianDocuments/.trash/
 
 # -------------------------
-# Versioned scratch / experiments
+# Backup / editor temp files 
 # -------------------------
-*.v0
-*.v1
-*.v2
+*~ 
+\#*\# 
+*.swp 
+*.swo 
+*.bak 
 
 # -------------------------
-# Python cache files
+# Versioned scratch / experiments 
 # -------------------------
-__pycache__/
-*.pyc
+*.v0 
+*.v1 
+*.v2 
 
 # -------------------------
-# OS / filesystem noise
+# Python cache files 
 # -------------------------
-.DS_Store
-Thumbs.db
+__pycache__/ 
+*.pyc 
 
 # -------------------------
-# Optional: local scripts or notes
+# OS / filesystem noise 
 # -------------------------
-*.log
+.DS_Store 
+Thumbs.db 
+
+# -------------------------
+# Optional: local scripts or notes 
+# -------------------------
+*.log 
 *.tmp
