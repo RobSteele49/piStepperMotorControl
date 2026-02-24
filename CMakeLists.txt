@@ -1,69 +1,61 @@
-
-# Project:   LX200 Focuser Automation
-# Component: WaveShare Stepper Driver Interface (Implementation)
-# File:      CMakeLists.txt
-# Author:    Robert D. Steele
-# Date:      2026-02-20
-# Version:   1.1 Added LX200
+# Project:    LX200 Focuser Automation
+# File:       CMakeLists.txt
+# Version:    1.2 (Dual-Motor & Utility Update)
 
 cmake_minimum_required(VERSION 3.10)
 project(PiStepperControl)
 
 set(CMAKE_CXX_STANDARD 17)
 
-# 1. Tell CMake where the header files are (.hpp)
+# 1. Include Path
 include_directories(include)
 
-# 2. Find the necessary Raspberry Pi libraries
+# 2. Libraries
 find_library(PIGPIO_LIB pigpio)
 find_library(PTHREAD_LIB pthread)
 find_library(RT_LIB rt)
 
-# 3. Create the WaveShare Library from the source folder
-# Note the "src/" prefix
+# Grouping libs for easy reference
+set(ALL_LIBS WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+
+# 3. WaveShare Library
 add_library(WaveShareStepper src/WaveShareStepper.cpp)
 
-# 4. Executables (Main Tests)
+# 4. Main Controller Applications (src/)
 add_executable(LX200_FocuserControl src/LX200_FocuserControl.cpp)
-target_link_libraries(LX200_FocuserControl WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+target_link_libraries(LX200_FocuserControl ${ALL_LIBS})
 
 add_executable(LX200_DualController src/LX200_DualController.cpp)
-target_link_libraries(LX200_DualController WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+target_link_libraries(LX200_DualController ${ALL_LIBS})
 
-
-# 5. Executables (Sub-folder Tests)
-# Note the "test/" prefix
+# 5. Utilities & Tests (test/)
 add_executable(DualMotorTest test/DualMotorTest.cpp)
-target_link_libraries(DualMotorTest WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+target_link_libraries(DualMotorTest ${ALL_LIBS})
 
 add_executable(ZeroFocuser test/ZeroFocuser.cpp)
-target_link_libraries(ZeroFocuser WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+target_link_libraries(ZeroFocuser ${ALL_LIBS})
 
 add_executable(BacklashCheck test/BacklashCheck.cpp)
-target_link_libraries(BacklashCheck WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+target_link_libraries(BacklashCheck ${ALL_LIBS})
 
 add_executable(FocuserMaxSpeed test/FocuserMaxSpeed.cpp)
-target_link_libraries(FocuserMaxSpeed WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+target_link_libraries(FocuserMaxSpeed ${ALL_LIBS})
 
-add_executable(SlowRotationTest test/SlowRotationTest.cpp)
-target_link_libraries(SlowRotationTest WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+add_executable(WhereAmI test/WhereAmI.cpp)
+target_link_libraries(WhereAmI ${ALL_LIBS})
 
-add_executable(HardwareProbe test/HardwareProbe.cpp)
-target_link_libraries(HardwareProbe WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+add_executable(ParkSystem test/ParkSystem.cpp)
+target_link_libraries(ParkSystem ${ALL_LIBS})
 
-add_executable(BacklashWizard test/BacklashWizard.cpp)
-target_link_libraries(BacklashWizard WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
-
-add_executable(ReSeatMirror test/ReSeatMirror.cpp)
-target_link_libraries(ReSeatMirror WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
-
+# Legacy / Specific Hardware Tests
 add_executable(Motor1Test test/Motor1Test.cpp)
 target_link_libraries(Motor1Test ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
 
 add_executable(Motor2Test test/Motor2Test.cpp)
 target_link_libraries(Motor2Test ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
 
-add_executable(WhereAmI test/WhereAmI.cpp)
-target_link_libraries(WhereAmI WaveShareStepper pigpio pthread)
-
-
+# Add these only if the .cpp files exist in your folder
+# add_executable(SlowRotationTest test/SlowRotationTest.cpp)
+# target_link_libraries(SlowRotationTest ${ALL_LIBS})
+# add_executable(HardwareProbe test/HardwareProbe.cpp)
+# target_link_libraries(HardwareProbe ${ALL_LIBS})
