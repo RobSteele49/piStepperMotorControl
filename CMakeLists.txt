@@ -4,7 +4,7 @@
 # File:      CMakeLists.txt
 # Author:    Robert D. Steele
 # Date:      2026-02-20
-# Version:   1.0 First version with a version number
+# Version:   1.1 Added LX200
 
 cmake_minimum_required(VERSION 3.10)
 project(PiStepperControl)
@@ -26,6 +26,10 @@ add_library(WaveShareStepper src/WaveShareStepper.cpp)
 # 4. Executables (Main Tests)
 add_executable(LX200_FocuserControl src/LX200_FocuserControl.cpp)
 target_link_libraries(LX200_FocuserControl WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+
+add_executable(LX200_DualController src/LX200_DualController.cpp)
+target_link_libraries(LX200_DualController WaveShareStepper ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
+
 
 # 5. Executables (Sub-folder Tests)
 # Note the "test/" prefix

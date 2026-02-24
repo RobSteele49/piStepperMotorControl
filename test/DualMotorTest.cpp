@@ -1,10 +1,10 @@
 /*
  * Project:    LX200 Focuser Automation
- * Component:  Concurrent Motor Test
+ * Component:  Dual Motor Stability & Thermal Test
  * File:       DualMotorTest.cpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    2.7 (Synced with WaveShareStepper v2.7 API)
+ * Version:    2.8 (Torture Test Edition)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -14,19 +14,14 @@
 #include "WaveShareStepper.hpp"
 #include "config.h"
 
-// Global pointers for the safety handler
 WaveShareStepper* g_focuser = nullptr;
 WaveShareStepper* g_rotator = nullptr;
 
 void safety_shutdown(int sig) {
-    std::cout << "\n[EMERGENCY STOP] Ctrl-C detected." << std::endl;
-    
-    // Release the coils (This stops the hum and heat)
+    std::cout << "\n[HALT] Test aborted by user. Releasing coils..." << std::endl;
     if (g_focuser) g_focuser->setPower(false);
     if (g_rotator) g_rotator->setPower(false);
-    
     gpioTerminate();
-    std::cout << "[SAFE] Coils released. Exiting." << std::endl;
     exit(0);
 }
 
@@ -34,35 +29,46 @@ int main() {
     if (gpioInitialise() < 0) return 1;
     signal(SIGINT, safety_shutdown);
 
-    { 
-        // Using the v2.7 Constructor logic
-        WaveShareStepper focuser(MOTOR_1);
-        WaveShareStepper rotator(MOTOR_2);
-        
-        g_focuser = &focuser;
-        g_rotator = &rotator;
+    WaveShareStepper focuser(MOTOR_1);
+    WaveShareStepper rotator(MOTOR_2);
+    g_focuser = &focuser;
+    g_rotator = &rotator;
 
-        std::cout << "--- Robert D. Steele: Dual Motor Test (v2.7) ---" << std::endl;
+    const int CYCLES = 10; // Increase this for a longer thermal test
+    const int TEST_STEPS = STEPS_PER_REV; 
 
-        // Verify power-up
+    std::cout << "--- DUAL MOTOR TORTURE TEST STARTING ---" << std::endl;
+    std::cout << "Cycles: " << CYCLES << " | Focuser (M1) & Rotator (M2)" << std::endl;
+    std::cout << "Monitor driver temperatures and power supply voltage." << std::endl;
+
+    for (int i = 1; i <= CYCLES; i++) {
+        std::cout << "\n[Cycle " << i << "/" << CYCLES << "]" << std::endl;
+
+        // Phase 1: Synchronized Push
+        std::cout << "  -> Both Motors CW..." << std::endl;
         focuser.setPower(true);
         rotator.setPower(true);
+        
+        // In this basic version, moves are sequential. 
+        focuser.moveStepsRamped(TEST_STEPS, SPEED_MED, 500, CW);
+        rotator.moveStepsRamped(TEST_STEPS, SPEED_MED, 500, CW);
 
-        std::cout << "Step 1: Testing Rotator (Motor 2) - 1/2 Revolution" << std::endl;
-        rotator.moveStepsRamped(STEPS_PER_REV / 2, SPEED_MED, 500, CW); 
+        gpioDelay(500000); // 0.5s pause
 
-        std::cout << "Step 2: Testing Focuser (Motor 1) - 5000 Steps" << std::endl;
-        focuser.moveStepsRamped(5000, SPEED_MED, 500, CCW); 
+        // Phase 2: Alternating Pull
+        std::cout << "  <- Both Motors CCW..." << std::endl;
+        focuser.moveStepsRamped(TEST_STEPS, SPEED_MED, 500, CCW);
+        rotator.moveStepsRamped(TEST_STEPS, SPEED_MED, 500, CCW);
 
-        std::cout << "Step 3: Moving Focuser back to absolute 1000" << std::endl;
-        focuser.moveTo(1000, SPEED_MED);
+        // Phase 3: High Torque Hold
+        std::cout << "  || Holding position (Checking for hum/heat)..." << std::endl;
+        gpioDelay(2000000); // 2 second energized hold
+    }
 
-        // Cleanup
-        std::cout << "Test complete. Releasing motors." << std::endl;
-        focuser.setPower(false);
-        rotator.setPower(false);
-    } 
+    std::cout << "\n--- TEST COMPLETE ---" << std::endl;
+    focuser.setPower(false);
+    rotator.setPower(false);
+    gpioTerminate();
 
-    gpioTerminate(); 
     return 0;
 }

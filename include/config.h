@@ -4,25 +4,28 @@
  * File:       config.h
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    2.7
+ * Version:    2.9 (Dual-Motor Independent Tuning)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
 #ifndef CONFIG_H
 #define CONFIG_H
 
-// Mechanical setup for 1/32 Microstepping
-const int STEPS_PER_REV = 6400;         // 200 * 32
-const int KNOB_GEAR_RATIO = 1;          // Adjust if using a geared motor
-const int STEPS_PER_KNOB_REV = STEPS_PER_REV * KNOB_GEAR_RATIO;
+// --- SHARED HARDWARE SETTINGS ---
+const int STEPS_PER_REV = 6400;         // 200 * 32 (1/32 microstepping)
 
-// Movement Profiles (Values in microseconds delay)
-const int SPEED_MAX  = 300;             // Fastest reliable speed
-const int SPEED_MED  = 600;             // Good for most moves
-const int SPEED_SLOW = 1000;            // High torque / Seating speed
+// --- FOCUSER SETTINGS (Motor 1) ---
+const int FOC_SPEED_MAX  = 300;         // Fast travel
+const int FOC_SPEED_MED  = 600;         // Standard focus
+const int FOC_SPEED_SLOW = 1000;        // Fine adjustment / Seating
+const int FOC_BACKLASH   = 1200;        // Mirror shift compensation
+const int FOC_PREF_DIR   = 1;           // 1 for CW (Pushing against spring)
 
-const int DEFAULT_RAMP_MS = 800;        // Smooth start/stop
-const int BACKLASH_STEPS = 1200;        // Adjust after running BacklashWizard
-const int PREFERRED_DIRECTION = 1;      // 1 for CW (Pushing against spring)
+// --- ROTATOR SETTINGS (Motor 2) ---
+const int ROT_SPEED_MAX  = 800;         // Slower than focuser for smoothness
+const int ROT_SPEED_MED  = 1200;        // Standard rotation
+const int ROT_SPEED_SLOW = 2500;        // Extremely fine framing
+const int ROT_BACKLASH   = 400;         // Typically lower for belt/gear rotators
+const int ROT_GEAR_RATIO = 1;           // Change if your rotator has a gearbox
 
 #endif
