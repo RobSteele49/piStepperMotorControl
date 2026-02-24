@@ -1,45 +1,54 @@
 /*
- * Project:   LX200 Focuser Automation
- * Component: Focuser Zeroing Utility
- * File:      ZeroFocuser.cpp
- * Author:    Robert D. Steele
- * Date:      2026-02-19
- * Version:   1.7 (Bypass Enabled)
+ * Project:    LX200 Focuser Automation
+ * Component:  Coordinate Reset Utility
+ * File:       ZeroFocuser.cpp
+ * Author:     Robert D. Steele
+ * Date:       2026-02-23
+ * Version:    1.2 (Synced with API v3.1)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
 #include <iostream>
 #include <signal.h>
 #include "WaveShareStepper.hpp"
+#include "config.h"
 
 WaveShareStepper* g_focuser = nullptr;
 
-
 void handle_sigint(int sig) {
+    std::cout << "\n[HALT] Interrupt received." << std::endl;
     if (g_focuser) {
-        g_focuser->stop();
+        // Powering down the coils acts as the 'stop' 
         g_focuser->setPower(false);
-        g_focuser->setCurrentPosition(0);
-        std::cout << "\n[ZEROED] Physical limit reached. Position reset to 0." << std::endl;
     }
     gpioTerminate();
     exit(0);
 }
 
 int main() {
-    if (gpioInitialise() < 0) return 1;
+    if (gpioInitialise() < 0) {
+        std::cerr << "pigpio initialization failed" << std::endl;
+        return 1;
+    }
+
     signal(SIGINT, handle_sigint);
 
+    // Explicitly scope the motor to ensure destructor runs on exit
     {
         WaveShareStepper focuser(MOTOR_1);
         g_focuser = &focuser;
 
-        std::cout << "--- Robert D. Steele: Ramped Zeroing Tool ---" << std::endl;
-        std::cout << "Homing CCW (Inward)... Press Ctrl-C at the physical stop." << std::endl;
+        std::cout << "--- Focuser Zeroing Utility ---" << std::endl;
+        std::cout << "Current position was: " << focuser.getCurrentPosition() << std::endl;
 
-        focuser.setPower(true);
-        // Using 1,000,001 steps to trigger the (totalSteps > 500000) safety bypass
-        focuser.moveStepsRamped(1000001, 800, 1000, CCW);
+        // Reset the position to 0
+        focuser.syncPosition(0);
+
+        std::cout << "SUCCESS: Focuser (M1) coordinate has been reset to 0." << std::endl;
+        std::cout << "New position is: " << focuser.getCurrentPosition() << std::endl;
+
+        // Ensure we don't leave it energized if it's just a reset
+        focuser.setPower(false);
     }
 
     gpioTerminate();

@@ -63,3 +63,7 @@ target_link_libraries(Motor1Test ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
 add_executable(Motor2Test test/Motor2Test.cpp)
 target_link_libraries(Motor2Test ${PIGPIO_LIB} ${PTHREAD_LIB} ${RT_LIB})
 
+add_executable(WhereAmI test/WhereAmI.cpp)
+target_link_libraries(WhereAmI WaveShareStepper pigpio pthread)
+
+

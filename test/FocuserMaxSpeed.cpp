@@ -1,26 +1,22 @@
 /*
- * Project:   LX200 Focuser Automation
- * Component: High-Speed Stress Test (Ramped)
- * File:      FocuserMaxSpeed.cpp
- * Author:    Robert D. Steele
- * Date:      2026-02-19
- * Version:   1.2
- * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
+ * Project:    LX200 Focuser Automation
+ * Component:  Speed Limit Tester
+ * File:       FocuserMaxSpeed.cpp
+ * Author:     Robert D. Steele
+ * Date:       2026-02-23
+ * Version:    1.4 (Synced with API v3.2)
  */
 
 #include <iostream>
-#include <unistd.h>
 #include <signal.h>
 #include "WaveShareStepper.hpp"
+#include "config.h"
 
 WaveShareStepper* g_focuser = nullptr;
 
 void safety_shutdown(int sig) {
-    std::cout << "\n[STOP] Killing high-speed test and releasing motor..." << std::endl;
-    if (g_focuser) {
-        g_focuser->stop();
-        g_focuser->setPower(false);
-    }
+    std::cout << "\n[EMERGENCY STOP] Cutting power to motor." << std::endl;
+    if (g_focuser) g_focuser->setPower(false);
     gpioTerminate();
     exit(0);
 }
@@ -29,33 +25,29 @@ int main() {
     if (gpioInitialise() < 0) return 1;
     signal(SIGINT, safety_shutdown);
 
-    {
-        WaveShareStepper focuser(MOTOR_1);
-        g_focuser = &focuser;
-        focuser.setPower(true);
+    WaveShareStepper focuser(MOTOR_1);
+    g_focuser = &focuser;
 
-	// Target: 3 Knob Revolutions
-        int totalSteps = STEPS_PER_KNOB_REV * 3;
-	
-	std::cout << "--- High Speed Test (Using Config.h) ---" << std::endl;
-	
-        // Phase 1: CCW (Inward/Down)
-        std::cout << "Phase 1: 3 Knob Revs COUNTER-CLOCKWISE (Ramped)..." << std::endl;
+    // Use the constant from config.h
+    int totalSteps = STEPS_PER_KNOB_REV * 3; 
 
-	focuser.moveStepsRamped(totalSteps, SPEED_MAX, DEFAULT_RAMP_MS, CCW);
+    std::cout << "--- Focuser Max Speed Stress Test ---" << std::endl;
+    std::cout << "Testing reliability at FOC_SPEED_MAX: " << FOC_SPEED_MAX << "us delay" << std::endl;
+    std::cout << "Moving 3 full knob revolutions..." << std::endl;
 
-        std::cout << "Pausing 5 seconds for mechanical settling..." << std::endl;
-        sleep(5);
+    // Move CCW
+    std::cout << "  Moving CCW (Inward)..." << std::endl;
+    focuser.moveStepsRamped(totalSteps, FOC_SPEED_MAX, DEFAULT_RAMP_MS, CCW);
+    
+    gpioDelay(1000000); // 1s pause
 
-        // Phase 2: CW (Outward/Up)
-        std::cout << "Phase 2: 3 Knob Revs CLOCKWISE (Ramped)..." << std::endl;
+    // Move CW
+    std::cout << "  Moving CW (Outward)..." << std::endl;
+    focuser.moveStepsRamped(totalSteps, FOC_SPEED_MAX, DEFAULT_RAMP_MS, CW);
 
-	focuser.moveStepsRamped(totalSteps, SPEED_MAX, DEFAULT_RAMP_MS, CW);
-	
-        focuser.setPower(false);
-        std::cout << "Test Complete. All movement was ramped. Motor Released." << std::endl;
-    }
+    std::cout << "Test Complete. If the motor stalled (whined without moving), increase FOC_SPEED_MAX in config.h." << std::endl;
 
+    focuser.setPower(false);
     gpioTerminate();
     return 0;
 }
