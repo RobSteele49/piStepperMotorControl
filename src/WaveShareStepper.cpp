@@ -4,7 +4,7 @@
  * File:       WaveShareStepper.cpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    2.7
+ * Version:    2.8
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -15,21 +15,41 @@
 #include <cmath>
 #include <algorithm>
 
-WaveShareStepper::WaveShareStepper(MotorChannel channel) {
-    if (channel == MOTOR_1) { _en = 4; _dir = 23; _step = 18; }
-    else { _en = 17; _dir = 27; _step = 22; }
+
+WaveShareStepper::WaveShareStepper(MotorChannel channel) : _channel(channel) {
+    if (channel == MOTOR_1) { 
+        _en = 4; _dir = 23; _step = 18; 
+        _backlash = FOC_BACKLASH;
+        _prefDir = FOC_PREF_DIR;
+    } else { 
+        _en = 17; _dir = 27; _step = 22; 
+        _backlash = ROT_BACKLASH;
+        _prefDir = ROT_PREF_DIR;
+    }
 
     gpioSetMode(_en, PI_OUTPUT);
     gpioSetMode(_dir, PI_OUTPUT);
     gpioSetMode(_step, PI_OUTPUT);
-
     loadPosition();
-    setPower(false); 
+    setPower(false);
 }
+
 
 WaveShareStepper::~WaveShareStepper() {
     setPower(false);
 }
+
+void WaveShareStepper::reSeat(int speed) {
+    Direction pushDir = (_prefDir == 1) ? CW : CCW;
+    Direction pullDir = (pushDir == CW) ? CCW : CW;
+
+    std::cout << "[RE-SEAT] Normalizing " << (_channel == MOTOR_1 ? "Focuser" : "Rotator") << "..." << std::endl;
+    
+    // Move out of the "slop" zone, then back in at a slower speed for precision
+    moveStepsRamped(_backlash * 2, speed, 500, pullDir);
+    moveStepsRamped(_backlash * 2, speed + 400, 800, pushDir);
+}
+
 
 void WaveShareStepper::setPower(bool on) {
     // Restored Active High logic: 1 = Energized

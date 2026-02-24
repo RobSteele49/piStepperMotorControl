@@ -4,7 +4,7 @@
  * File:       LX200_DualController.cpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    2.9
+ * Version:    2.10
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -46,7 +46,14 @@ int main() {
             case '3': rotator.moveStepsRamped(1000, ROT_SPEED_MED, 800, CCW); break;
             case '4': rotator.moveStepsRamped(1000, ROT_SPEED_MED, 800, CW); break;
 
-            case 'R': focuser.reSeat(); break;
+            case 'R': {
+	      std::cout << "Re-Seat: [1] Focuser or [2] Rotator? ";
+	      int sub; std::cin >> sub;
+	      if (sub == 1) focuser.reSeat(FOC_SPEED_MED);
+	      else if (sub == 2) rotator.reSeat(ROT_SPEED_MED);
+	      break;
+	    }
+
             case 'S': {
                 long long p1, p2;
                 std::cout << "New Focuser Pos: "; std::cin >> p1;
