@@ -1,10 +1,10 @@
 /*
- * Project:   LX200 Focuser Automation
- * Component: Concurrent Motor Test
- * File:      DualMotorTest.cpp
- * Author:    Robert D. Steele
- * Date:      2026-02-19
- * Version:   1.7
+ * Project:    LX200 Focuser Automation
+ * Component:  Concurrent Motor Test
+ * File:       DualMotorTest.cpp
+ * Author:     Robert D. Steele
+ * Date:       2026-02-23
+ * Version:    2.7 (Synced with WaveShareStepper v2.7 API)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -12,26 +12,21 @@
 #include <unistd.h>
 #include <signal.h>
 #include "WaveShareStepper.hpp"
+#include "config.h"
 
-// Global pointers so the safety handler can reach them
+// Global pointers for the safety handler
 WaveShareStepper* g_focuser = nullptr;
 WaveShareStepper* g_rotator = nullptr;
 
 void safety_shutdown(int sig) {
     std::cout << "\n[EMERGENCY STOP] Ctrl-C detected." << std::endl;
     
-    // 1. Stop the pulses immediately
-    if (g_focuser) g_focuser->stop();
-    if (g_rotator) g_rotator->stop();
-    
-    // 2. RELEASE the coils (This stops the hum and heat)
+    // Release the coils (This stops the hum and heat)
     if (g_focuser) g_focuser->setPower(false);
     if (g_rotator) g_rotator->setPower(false);
     
-    // 3. Close the library
     gpioTerminate();
-    
-    std::cout << "[SAFE] Pulses stopped and coils released. Exiting." << std::endl;
+    std::cout << "[SAFE] Coils released. Exiting." << std::endl;
     exit(0);
 }
 
@@ -40,25 +35,30 @@ int main() {
     signal(SIGINT, safety_shutdown);
 
     { 
+        // Using the v2.7 Constructor logic
         WaveShareStepper focuser(MOTOR_1);
         WaveShareStepper rotator(MOTOR_2);
+        
         g_focuser = &focuser;
         g_rotator = &rotator;
 
-        std::cout << "--- Robert D. Steele: Dual Motor Test (Safety V1.7) ---" << std::endl;
+        std::cout << "--- Robert D. Steele: Dual Motor Test (v2.7) ---" << std::endl;
 
+        // Verify power-up
         focuser.setPower(true);
         rotator.setPower(true);
 
-        std::cout << "Running... Press Ctrl-C to test the SILENT release." << std::endl;
+        std::cout << "Step 1: Testing Rotator (Motor 2) - 1/2 Revolution" << std::endl;
+        rotator.moveStepsRamped(STEPS_PER_REV / 2, SPEED_MED, 500, CW); 
 
-        rotator.moveAtHz(200, CW); 
-        focuser.moveRelative(5000, 1000); 
-        focuser.moveTo(1000, 1000);
+        std::cout << "Step 2: Testing Focuser (Motor 1) - 5000 Steps" << std::endl;
+        focuser.moveStepsRamped(5000, SPEED_MED, 500, CCW); 
 
-        rotator.stop();
-        
-        // Manual cleanup for normal exit
+        std::cout << "Step 3: Moving Focuser back to absolute 1000" << std::endl;
+        focuser.moveTo(1000, SPEED_MED);
+
+        // Cleanup
+        std::cout << "Test complete. Releasing motors." << std::endl;
         focuser.setPower(false);
         rotator.setPower(false);
     } 

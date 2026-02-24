@@ -1,51 +1,41 @@
 /*
- * Project:   LX200 Focuser Automation
- * Component: WaveShare Stepper Driver Interface (Header)
- * File:      WaveShareStepper.hpp
- * Author:    Robert D. Steele
- * Date:      2026-02-19
- * Version:   2.10 Implementing syncPosition
+ * Project:    LX200 Focuser Automation
+ * Component:  WaveShare Stepper Driver Header
+ * File:       WaveShareStepper.hpp
+ * Author:     Robert D. Steele
+ * Date:       2026-02-23
+ * Version:    2.7
+ * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
 #ifndef WAVESHARE_STEPPER_HPP
 #define WAVESHARE_STEPPER_HPP
 
 #include <pigpio.h>
-#include <iomanip> // Added here to ensure all tests see it
-#include "config.h"
 
 enum MotorChannel { MOTOR_1, MOTOR_2 };
+enum Direction { CW, CCW };
 
 class WaveShareStepper {
 public:
     WaveShareStepper(MotorChannel channel);
     ~WaveShareStepper();
 
-    void setPower(bool on);
-    void stop();
+    void moveStepsRamped(int steps, int maxSpeed, int rampMs, Direction dir);
+    void moveTo(long long targetPosition, int speed);
     
-    // Non-blocking for Rotator
-    void moveAtHz(int frequency, Direction dir);           
-
-    // Blocking movements
-    void moveStepsRamped(int totalSteps, int targetHz, int rampTimeMs, Direction dir); 
-    void moveSteps(int steps, int freq, Direction dir); // <--- RESTORED for BacklashCheck
-    void moveTo(long long targetPosition, int speedHz);      
-    void moveRelative(long long offset, int speedHz);        
-    void reSeat();
-    void savePosition(); // Now public so you can force a save if needed
-    void loadPosition();
+    void setPower(bool on);
     void syncPosition(long long newPos);
-  
-    long long getCurrentPosition();
-    void setCurrentPosition(long long pos) { _stepPosition = pos; }
-
-    static void globalEmergencyStop(WaveShareStepper* m1, WaveShareStepper* m2 = nullptr);
+    long long getCurrentPosition() { return _stepPosition; }
+    
+    void reSeat();
+    static void globalEmergencyStop(WaveShareStepper* instance);
 
 private:
     int _en, _dir, _step;
-    bool _is_enabled = false;
-    long long _stepPosition = 0; 
+    long long _stepPosition;
+    void savePosition();
+    void loadPosition();
 };
 
 #endif

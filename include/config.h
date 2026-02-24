@@ -1,50 +1,28 @@
 /*
- * Project:   LX200 Focuser Automation
- * Component: Global Configuration Constants
- * File:      config.h
- * Author:    Robert D. Steele
- * Date:      2026-02-19
- * Version:   1.2
+ * Project:    LX200 Focuser Automation
+ * Component:  System Configuration Constants
+ * File:       config.h
+ * Author:     Robert D. Steele
+ * Date:       2026-02-23
+ * Version:    2.7
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
 #ifndef CONFIG_H
 #define CONFIG_H
 
-enum Direction { CW = 0, CCW = 1 };
+// Mechanical setup for 1/32 Microstepping
+const int STEPS_PER_REV = 6400;         // 200 * 32
+const int KNOB_GEAR_RATIO = 1;          // Adjust if using a geared motor
+const int STEPS_PER_KNOB_REV = STEPS_PER_REV * KNOB_GEAR_RATIO;
 
-// --- Hardware Physical Constants ---
-const float GEAR_RATIO           = 3.0f;  // 1:3 Gear reduction
-const int   MOTOR_NATIVE_STEPS   = 400;   // 0.9 degree motor
-const int   MICROSTEP_DIVIDER    = 32;    // DIP switches all ON (1/32)
+// Movement Profiles (Values in microseconds delay)
+const int SPEED_MAX  = 300;             // Fastest reliable speed
+const int SPEED_MED  = 600;             // Good for most moves
+const int SPEED_SLOW = 1000;            // High torque / Seating speed
 
-// --- Derived Calculation Constants ---
-// Total steps for one full motor revolution: 400 * 32 = 12,800
-const int STEPS_PER_MOTOR_REV    = MOTOR_NATIVE_STEPS * MICROSTEP_DIVIDER;
+const int DEFAULT_RAMP_MS = 800;        // Smooth start/stop
+const int BACKLASH_STEPS = 1200;        // Adjust after running BacklashWizard
+const int PREFERRED_DIRECTION = 1;      // 1 for CW (Pushing against spring)
 
-// Total steps for one full Focuser Knob revolution: 12,800 * 3 = 38,400
-const int STEPS_PER_KNOB_REV     = (int)(STEPS_PER_MOTOR_REV * GEAR_RATIO);
-
-// --- Default Speeds (in Hz) ---
-const int SPEED_SLOW             = 800;   // Precise crawling
-const int SPEED_MED              = 2500;  // Standard focusing
-const int SPEED_MAX              = 6400;  // High-speed transit (6s/knob rev)
-
-// --- Safety & Ramping ---
-const int DEFAULT_RAMP_MS        = 1000;  // 1 second acceleration
-
-// --- Backlash Compensation ---
-// The direction that "pushes" the mirror against the tension of the screw
-const Direction PREFERRED_DIRECTION = CW; 
-
-// The number of steps the motor turns before the mirror actually starts moving.
-// Adjust this based on your BacklashCheck results.
-const int BACKLASH_STEPS = 650; 
-
-// --- Soft Limits ---
-// Let's assume a total safe travel of 20 revolutions from the zero point.
-// This prevents the mirror from traveling too far in either direction.
-const long long MAX_LIMIT_STEPS = (long long)(STEPS_PER_KNOB_REV * 20);
-const long long MIN_LIMIT_STEPS = (long long)(STEPS_PER_KNOB_REV * -20);
-
-#endif // CONFIG_H
+#endif
