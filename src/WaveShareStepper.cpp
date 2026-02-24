@@ -4,8 +4,7 @@
  * File:       WaveShareStepper.cpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    2.8
- * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
+ * Version:    3.1
  */
 
 #include "WaveShareStepper.hpp"
@@ -14,7 +13,6 @@
 #include <fstream>
 #include <cmath>
 #include <algorithm>
-
 
 WaveShareStepper::WaveShareStepper(MotorChannel channel) : _channel(channel) {
     if (channel == MOTOR_1) { 
@@ -34,9 +32,12 @@ WaveShareStepper::WaveShareStepper(MotorChannel channel) : _channel(channel) {
     setPower(false);
 }
 
-
 WaveShareStepper::~WaveShareStepper() {
     setPower(false);
+}
+
+void WaveShareStepper::setPower(bool on) {
+    gpioWrite(_en, on ? 1 : 0);
 }
 
 void WaveShareStepper::reSeat(int speed) {
@@ -45,15 +46,8 @@ void WaveShareStepper::reSeat(int speed) {
 
     std::cout << "[RE-SEAT] Normalizing " << (_channel == MOTOR_1 ? "Focuser" : "Rotator") << "..." << std::endl;
     
-    // Move out of the "slop" zone, then back in at a slower speed for precision
     moveStepsRamped(_backlash * 2, speed, 500, pullDir);
     moveStepsRamped(_backlash * 2, speed + 400, 800, pushDir);
-}
-
-
-void WaveShareStepper::setPower(bool on) {
-    // Restored Active High logic: 1 = Energized
-    gpioWrite(_en, on ? 1 : 0);
 }
 
 void WaveShareStepper::moveStepsRamped(int steps, int maxSpeed, int rampMs, Direction dir) {
@@ -61,7 +55,6 @@ void WaveShareStepper::moveStepsRamped(int steps, int maxSpeed, int rampMs, Dire
     gpioWrite(_dir, (dir == CW) ? 1 : 0);
 
     for (int i = 0; i < steps; i++) {
-        // Simple linear ramp could go here, but using constant speed for reliability
         gpioWrite(_step, 1);
         gpioDelay(maxSpeed);
         gpioWrite(_step, 0);
@@ -78,26 +71,20 @@ void WaveShareStepper::moveTo(long long targetPosition, int speed) {
     moveStepsRamped(std::abs(delta), speed, DEFAULT_RAMP_MS, dir);
 }
 
-void WaveShareStepper::reSeat() {
-    Direction pushDir = (PREFERRED_DIRECTION == 1) ? CW : CCW;
-    Direction pullDir = (pushDir == CW) ? CCW : CW;
-    std::cout << "[RE-SEAT] Stabilizing mirror..." << std::endl;
-    moveStepsRamped(BACKLASH_STEPS * 2, SPEED_MED, 500, pullDir);
-    moveStepsRamped(BACKLASH_STEPS * 2, SPEED_SLOW, 1000, pushDir);
-}
-
 void WaveShareStepper::syncPosition(long long newPos) {
     _stepPosition = newPos;
     savePosition();
 }
 
 void WaveShareStepper::savePosition() {
-    std::ofstream posFile("last_position.txt");
+    std::string filename = (_channel == MOTOR_1) ? "pos_m1.txt" : "pos_m2.txt";
+    std::ofstream posFile(filename);
     if (posFile.is_open()) { posFile << _stepPosition; posFile.close(); }
 }
 
 void WaveShareStepper::loadPosition() {
-    std::ifstream posFile("last_position.txt");
+    std::string filename = (_channel == MOTOR_1) ? "pos_m1.txt" : "pos_m2.txt";
+    std::ifstream posFile(filename);
     if (posFile.is_open()) { posFile >> _stepPosition; posFile.close(); }
     else { _stepPosition = 0; }
 }

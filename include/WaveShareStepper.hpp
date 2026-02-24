@@ -4,14 +4,14 @@
  * File:       WaveShareStepper.hpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    2.8
- * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
+ * Version:    3.1
  */
 
 #ifndef WAVESHARE_STEPPER_HPP
 #define WAVESHARE_STEPPER_HPP
 
 #include <pigpio.h>
+#include <string>
 
 enum MotorChannel { MOTOR_1, MOTOR_2 };
 enum Direction { CW, CCW };
@@ -27,8 +27,8 @@ public:
     void syncPosition(long long newPos);
     long long getCurrentPosition() { return _stepPosition; }
     
-    // Now generic for either motor
     void reSeat(int speed); 
+    static void globalEmergencyStop(WaveShareStepper* instance);
 
 private:
     int _en, _dir, _step;
