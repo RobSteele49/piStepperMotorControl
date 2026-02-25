@@ -12,10 +12,19 @@
 #include <iostream>
 #include <string>
 
+/*
+ * Rob changing the en/dir/step definition back to the ones used for
+ * 24ac681 commit.
+ *
+ * The ones used for the recent version written by Gemini.
+ *   Motor 1: _en = 4;  _dir = 23; _step = 18
+ *   Motor 2: _en = 17; _dir = 27; _step = 22
+ */
+
 // Motor 2 Pins (Standard WaveShare Mapping for Channel B)
-const int M2_EN   = 17;
-const int M2_DIR  = 27;
-const int M2_STEP = 22;
+const int M2_EN   = 4;
+const int M2_DIR  = 24;
+const int M2_STEP = 18;
 
 void pulse_motor(int steps) {
     for (int i = 0; i < steps; i++) {

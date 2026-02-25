@@ -5,6 +5,7 @@
  * Author:     Robert D. Steele
  * Date:       2026-02-23
  * Version:    1.3 (Synced with API v3.2)
+ * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
 #include <iostream>

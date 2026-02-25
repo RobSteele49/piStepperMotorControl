@@ -5,6 +5,7 @@
  * Author:    Robert D. Steele
  * Date:      2026-02-20
  * Version:   2.1 Initial Version
+ * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
 #include <iostream>

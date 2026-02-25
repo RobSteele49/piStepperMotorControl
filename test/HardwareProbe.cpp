@@ -1,3 +1,13 @@
+/*
+ * Project:    LX200 Focuser Automation
+ * Component:  ...
+ * File:       HardwareProbe.cpp
+ * Author:     Robert D. Steele
+ * Date:       2026-02-23
+ * Version:    1.0 (Initial Version)
+ * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
+ */
+
 #include <pigpio.h>
 #include <iostream>
 #include <string>

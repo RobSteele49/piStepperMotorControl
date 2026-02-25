@@ -4,7 +4,8 @@
  * File:       WaveShareStepper.cpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    3.1
+ * Version:    3.2 Changed en, dir, and step definitions back to 24ac618
+ * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
 #include "WaveShareStepper.hpp"
@@ -14,16 +15,21 @@
 #include <cmath>
 #include <algorithm>
 
-// Rob changing the en/dir/step definition
+/*
+ * Rob changing the en/dir/step definition back to the ones used for
+ * 24ac681 commit.
+ *
+ * The ones used for the recent version written by Gemini.
+ *   Motor 1: _en = 4;  _dir = 23; _step = 18
+ *   Motor 2: _en = 17; _dir = 27; _step = 22
+ */
 
 WaveShareStepper::WaveShareStepper(MotorChannel channel) : _channel(channel) {
     if (channel == MOTOR_1) {
-      //        _en = 4; _dir = 23; _step = 18; 
         _en = 12; _dir = 13; _step = 19; 
         _backlash = FOC_BACKLASH;
         _prefDir = FOC_PREF_DIR;
     } else { 
-      //        _en = 17; _dir = 27; _step = 22; 
         _en = 4; _dir = 24; _step = 18; 
         _backlash = ROT_BACKLASH;
         _prefDir = ROT_PREF_DIR;

@@ -5,6 +5,7 @@
  * Author:     Robert D. Steele
  * Date:       2026-02-23
  * Version:    3.1
+ * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
 #ifndef WAVESHARE_STEPPER_HPP

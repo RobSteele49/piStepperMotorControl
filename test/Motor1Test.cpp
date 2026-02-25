@@ -1,10 +1,29 @@
+/*
+ * Project:    LX200 Focuser Automation
+ * Component:  Motor 1 Test
+ * File:       Motor1Test.cpp
+ * Author:     Robert D. Steele
+ * Date:       2026-02-23
+ * Version:    1.0 (Initial Commit)
+ * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
+ */
+
 #include <pigpio.h>
 #include <iostream>
 
+/*
+ * Rob changing the en/dir/step definition back to the ones used for
+ * 24ac681 commit.
+ *
+ * The ones used for the recent version written by Gemini.
+ *   Motor 1: _en = 4;  _dir = 23; _step = 18
+ *   Motor 2: _en = 17; _dir = 27; _step = 22
+ */
+
 // Motor 1 Pins (Standard WaveShare Mapping)
-const int M1_EN   = 4;
-const int M1_DIR  = 23;
-const int M1_STEP = 18;
+const int M1_EN   = 12;
+const int M1_DIR  = 13;
+const int M1_STEP = 19;
 
 void pulse_motor(int steps) {
     for (int i = 0; i < steps; i++) {

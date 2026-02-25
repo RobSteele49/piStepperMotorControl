@@ -4,7 +4,7 @@
  * File:      HardwareProbe.cpp
  * Author:    Robert D. Steele
  * Date:      2026-02-20
- * Version:   1.1 (Initial Version)
+ * Version:   1.2 (Changed en dir step definitions)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -17,10 +17,18 @@ int main() {
         return 1;
     }
 
+    /*
+     * For some reason Gemini changed the definitions from the working commit 24ac618.
+     * The ones Gemini was using:
+     *   const int EN   = 4;
+     *	 const int DIR  = 23;
+     *   const int STEP = 18;
+     */
+    
     // Motor 1 Pins (WaveShare Hat Defaults)
-    const int EN   = 4;
-    const int DIR  = 23;
-    const int STEP = 18;
+    const int EN   = 12;
+    const int DIR  = 13;
+    const int STEP = 19;
 
     gpioSetMode(EN, PI_OUTPUT);
     gpioSetMode(DIR, PI_OUTPUT);
