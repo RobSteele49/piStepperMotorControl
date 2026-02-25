@@ -29,10 +29,14 @@ WaveShareStepper::WaveShareStepper(MotorChannel channel) : _channel(channel) {
         _en = 12; _dir = 13; _step = 19; 
         _backlash = FOC_BACKLASH;
         _prefDir = FOC_PREF_DIR;
+	_limitMin = FOC_LIMIT_MIN; // Load limits
+        _limitMax = FOC_LIMIT_MAX;
     } else { 
         _en = 4; _dir = 24; _step = 18; 
         _backlash = ROT_BACKLASH;
         _prefDir = ROT_PREF_DIR;
+	_limitMin = ROT_LIMIT_MIN;
+        _limitMax = ROT_LIMIT_MAX;
     }
 
     gpioSetMode(_en, PI_OUTPUT);
@@ -75,8 +79,19 @@ void WaveShareStepper::moveStepsRamped(int steps, int maxSpeed, int rampMs, Dire
 }
 
 void WaveShareStepper::moveTo(long long targetPosition, int speed) {
+    // SOFTWARE LIMIT CHECK (Clamping)
+    if (targetPosition > _limitMax) {
+        std::cout << "[LIMIT] Target exceeds Max. Clamping to " << _limitMax << std::endl;
+        targetPosition = _limitMax;
+    }
+    if (targetPosition < _limitMin) {
+        std::cout << "[LIMIT] Target exceeds Min. Clamping to " << _limitMin << std::endl;
+        targetPosition = _limitMin;
+    }
+
     long long delta = targetPosition - _stepPosition;
     if (delta == 0) return;
+    
     Direction dir = (delta > 0) ? CW : CCW;
     moveStepsRamped(std::abs(delta), speed, DEFAULT_RAMP_MS, dir);
 }

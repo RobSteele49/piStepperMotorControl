@@ -4,7 +4,7 @@
  * File:       WaveShareStepper.hpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    3.1
+ * Version:    3.2 (Added private variables _limitMin and _limitMax)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -35,6 +35,8 @@ private:
     int _en, _dir, _step;
     int _backlash;
     int _prefDir;
+    long long _limitMin; // New
+    long long _limitMax; // New
     MotorChannel _channel;
     long long _stepPosition;
     void savePosition();

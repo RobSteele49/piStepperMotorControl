@@ -29,6 +29,10 @@ add_executable(LX200_DualController src/LX200_DualController.cpp)
 target_link_libraries(LX200_DualController ${ALL_LIBS})
 
 # 5. Utilities & Tests (test/)
+
+add_executable(CalibrationWizard test/CalibrationWizard.cpp)
+target_link_libraries(CalibrationWizard ${ALL_LIBS})
+
 add_executable(DualMotorTest test/DualMotorTest.cpp)
 target_link_libraries(DualMotorTest ${ALL_LIBS})
 
