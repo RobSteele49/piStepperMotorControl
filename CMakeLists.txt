@@ -1,31 +1,45 @@
+# ==============================================================================
 # Project:    LX200 Focuser Automation
+# Component:  Build Configuration
 # File:       CMakeLists.txt
-# Version:    2.0
+# Author:     Robert D. Steele
+# Date:       2026-02-25
+# Version:    4.2
+# Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
+# ==============================================================================
 
 cmake_minimum_required(VERSION 3.10)
 project(LX200_Automation)
 
 set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-# Include directories
-include_directories(include)
-
-# Find Pigpio (Required for WaveShare HAT)
+# 1. Paths and Libraries
+include_directories(${PROJECT_SOURCE_DIR}/include)
 find_package(Threads REQUIRED)
+set(LIBS pigpio rt Threads::Threads)
 
-# Define the Master Controller Executable
-# We are intentionally leaving out FocuserControl.cpp here
+# ------------------------------------------------------------------------------
+# TARGET 1: The Main Controller
+# ------------------------------------------------------------------------------
 add_executable(dual 
     src/LX200_DualController.cpp 
     src/WaveShareStepper.cpp
 )
+target_link_libraries(dual PRIVATE ${LIBS})
 
-# Link necessary libraries
-target_link_libraries(dual 
-    PRIVATE 
-    pigpio 
-    rt 
-    Threads::Threads
+# ------------------------------------------------------------------------------
+# TARGET 2: Focuser Test Utility
+# ------------------------------------------------------------------------------
+add_executable(testFocuser 
+    src/testFocuser.cpp 
+    src/WaveShareStepper.cpp
 )
+target_link_libraries(testFocuser PRIVATE ${LIBS})
 
-# Optional: Add a clean-up rule to ignore the old deprecated binary if it exists
+# ------------------------------------------------------------------------------
+# TARGET 3: Basic Hardware Verification (Optional)
+# ------------------------------------------------------------------------------
+# We will leave this out for now to avoid the previous linker error.
+# 'testFocuser' now serves as your hardware verification tool.
+# ------------------------------------------------------------------------------
