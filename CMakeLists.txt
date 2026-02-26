@@ -39,3 +39,8 @@ add_executable(testRotator
     src/WaveShareStepper.cpp
 )
 target_link_libraries(testRotator PRIVATE ${LIBS})
+
+# TARGET 5: Automated Hardware Probe (for Pre-Flight script)
+add_executable(HardwareProbe src/HardwareProbe.cpp)
+target_link_libraries(HardwareProbe PRIVATE ${LIBS})
+
