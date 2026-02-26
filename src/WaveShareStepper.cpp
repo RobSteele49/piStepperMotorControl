@@ -4,7 +4,7 @@
  * File:       WaveShareStepper.cpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    3.2 Changed en, dir, and step definitions back to 24ac618
+ * Version:    3.3 Added safety limit checks
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -24,18 +24,19 @@
  *   Motor 2: _en = 17; _dir = 27; _step = 22
  */
 
+
 WaveShareStepper::WaveShareStepper(MotorChannel channel) : _channel(channel) {
     if (channel == MOTOR_1) {
         _en = 12; _dir = 13; _step = 19; 
         _backlash = FOC_BACKLASH;
         _prefDir = FOC_PREF_DIR;
-	_limitMin = FOC_LIMIT_MIN; // Load limits
+        _limitMin = FOC_LIMIT_MIN;
         _limitMax = FOC_LIMIT_MAX;
     } else { 
         _en = 4; _dir = 24; _step = 18; 
         _backlash = ROT_BACKLASH;
         _prefDir = ROT_PREF_DIR;
-	_limitMin = ROT_LIMIT_MIN;
+        _limitMin = ROT_LIMIT_MIN;
         _limitMax = ROT_LIMIT_MAX;
     }
 
@@ -50,13 +51,31 @@ WaveShareStepper::~WaveShareStepper() {
     setPower(false);
 }
 
+void WaveShareStepper::setLimits(long long minPos, long long maxPos) {
+    _limitMin = minPos;
+    _limitMax = maxPos;
+}
+
+bool WaveShareStepper::isMoveSafe(long long steps, int direction) {
+    long long displacement = (direction == CW) ? steps : -steps;
+    // FIX: Changed _currentPosition to _stepPosition
+    long long targetPos = _stepPosition + displacement;
+
+    if (targetPos < _limitMin || targetPos > _limitMax) {
+        std::cerr << "[SAFETY] Move blocked! Target " << targetPos 
+                  << " is outside limits (" << _limitMin << " to " << _limitMax << ")" << std::endl;
+        return false;
+    }
+    return true;
+}
+
 void WaveShareStepper::setPower(bool on) {
     gpioWrite(_en, on ? 1 : 0);
 }
 
 void WaveShareStepper::reSeat(int speed) {
-    Direction pushDir = (_prefDir == 1) ? CW : CCW;
-    Direction pullDir = (pushDir == CW) ? CCW : CW;
+    int pushDir = (_prefDir == 1) ? CW : CCW;
+    int pullDir = (pushDir == CW) ? CCW : CW;
 
     std::cout << "[RE-SEAT] Normalizing " << (_channel == MOTOR_1 ? "Focuser" : "Rotator") << "..." << std::endl;
     
@@ -64,11 +83,14 @@ void WaveShareStepper::reSeat(int speed) {
     moveStepsRamped(_backlash * 2, speed + 400, 800, pushDir);
 }
 
-void WaveShareStepper::moveStepsRamped(int steps, int maxSpeed, int rampMs, Direction dir) {
+// FIX: Matched signature to .hpp (long long steps, int dir)
+void WaveShareStepper::moveStepsRamped(long long steps, int maxSpeed, int rampMs, int dir) {
+    if (!isMoveSafe(steps, dir)) return; 
+    
     setPower(true);
     gpioWrite(_dir, (dir == CW) ? 1 : 0);
 
-    for (int i = 0; i < steps; i++) {
+    for (long long i = 0; i < steps; i++) {
         gpioWrite(_step, 1);
         gpioDelay(maxSpeed);
         gpioWrite(_step, 0);
@@ -79,20 +101,19 @@ void WaveShareStepper::moveStepsRamped(int steps, int maxSpeed, int rampMs, Dire
 }
 
 void WaveShareStepper::moveTo(long long targetPosition, int speed) {
-    // SOFTWARE LIMIT CHECK (Clamping)
     if (targetPosition > _limitMax) {
-        std::cout << "[LIMIT] Target exceeds Max. Clamping to " << _limitMax << std::endl;
+        std::cout << "[LIMIT] Clamping to Max: " << _limitMax << std::endl;
         targetPosition = _limitMax;
     }
     if (targetPosition < _limitMin) {
-        std::cout << "[LIMIT] Target exceeds Min. Clamping to " << _limitMin << std::endl;
+        std::cout << "[LIMIT] Clamping to Min: " << _limitMin << std::endl;
         targetPosition = _limitMin;
     }
 
     long long delta = targetPosition - _stepPosition;
     if (delta == 0) return;
     
-    Direction dir = (delta > 0) ? CW : CCW;
+    int dir = (delta > 0) ? CW : CCW;
     moveStepsRamped(std::abs(delta), speed, DEFAULT_RAMP_MS, dir);
 }
 

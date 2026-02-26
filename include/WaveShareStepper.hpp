@@ -22,7 +22,9 @@ public:
     WaveShareStepper(MotorChannel channel);
     ~WaveShareStepper();
 
-    void moveStepsRamped(int steps, int maxSpeed, int rampMs, Direction dir);
+    // Changed 'int steps' to 'long long steps' to match implementation
+    // Changed 'Direction dir' to 'int dir' for simpler switch handling
+    void moveStepsRamped(long long steps, int maxSpeed, int rampMs, int dir);
     void moveTo(long long targetPosition, int speed);
     void setPower(bool on);
     void syncPosition(long long newPos);
@@ -31,14 +33,17 @@ public:
     void reSeat(int speed); 
     static void globalEmergencyStop(WaveShareStepper* instance);
 
+    void setLimits(long long minPos, long long maxPos);
+    bool isMoveSafe(long long steps, int direction);
+  
 private:
     int _en, _dir, _step;
     int _backlash;
     int _prefDir;
-    long long _limitMin; // New
-    long long _limitMax; // New
+    long long _limitMin;
+    long long _limitMax;
     MotorChannel _channel;
-    long long _stepPosition;
+    long long _stepPosition; // This is the variable name used in the class
     void savePosition();
     void loadPosition();
 };
