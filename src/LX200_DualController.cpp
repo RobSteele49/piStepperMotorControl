@@ -4,7 +4,7 @@
  * File:       LX200_DualController.cpp
  * Author:     Robert D. Steele
  * Date:       2026-02-24
- * Version:    4.3 (Added clearLog utility)
+ * Version:    4.4 (Added G, M, and R cases)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -176,7 +176,56 @@ int main() {
                 focuser.moveTo(0, FOC_SPEED_MED);
                 break;
             
-            // ... (Add G, M, R cases as needed) ...
+	    case 'G': { // Absolute GoTo
+                int motor;
+                long long target;
+                std::cout << "\n[GOTO] Motor Select ([1] Focuser | [2] Rotator): ";
+                if (!(std::cin >> motor)) { std::cin.clear(); std::cin.ignore(100, '\n'); break; }
+                
+                std::cout << "Enter Target Position (steps): ";
+                if (!(std::cin >> target)) { std::cin.clear(); std::cin.ignore(100, '\n'); break; }
+
+                if (motor == 1) {
+                    std::cout << "Moving Focuser to " << target << "..." << std::endl;
+                    focuser.moveTo(target, FOC_SPEED_MED);
+                } else if (motor == 2) {
+                    std::cout << "Moving Rotator to " << target << "..." << std::endl;
+                    rotator.moveTo(target, ROT_SPEED_MED);
+                } else {
+                    std::cout << "[!] Invalid motor selection." << std::endl;
+                }
+                break;
+            }
+
+            case 'M': { // Relative Move
+                int motor;
+                long long offset;
+                std::cout << "\n[MOVE] Motor Select ([1] Focuser | [2] Rotator): ";
+                if (!(std::cin >> motor)) { std::cin.clear(); std::cin.ignore(100, '\n'); break; }
+
+                std::cout << "Enter Step Offset (use negative for reverse): ";
+                if (!(std::cin >> offset)) { std::cin.clear(); std::cin.ignore(100, '\n'); break; }
+
+                if (motor == 1) {
+                    long long newPos = focuser.getCurrentPosition() + offset;
+                    std::cout << "Moving Focuser to " << newPos << "..." << std::endl;
+                    focuser.moveTo(newPos, FOC_SPEED_MED);
+                } else if (motor == 2) {
+                    long long newPos = rotator.getCurrentPosition() + offset;
+                    std::cout << "Moving Rotator to " << newPos << "..." << std::endl;
+                    rotator.moveTo(newPos, ROT_SPEED_MED);
+                } else {
+                    std::cout << "[!] Invalid motor selection." << std::endl;
+                }
+                break;
+            }
+
+            case 'R': { // Re-Seat (Backlash Normalization)
+                std::cout << "\n[RE-SEAT] Normalizing Focuser mechanism..." << std::endl;
+                focuser.reSeat(FOC_SPEED_MED);
+                std::cout << "[OK] Focuser re-seated against preferred direction." << std::endl;
+                break;
+            }
         }
     }
 
