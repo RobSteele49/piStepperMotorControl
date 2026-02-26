@@ -4,7 +4,7 @@
 # File:       CMakeLists.txt
 # Author:     Robert D. Steele
 # Date:       2026-02-25
-# Version:    4.3 (The "No-Error" Version)
+# Version:    4.4 (Added building of testRotator)
 # Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
 # ==============================================================================
 
@@ -32,3 +32,10 @@ add_executable(testFocuser
     src/WaveShareStepper.cpp
 )
 target_link_libraries(testFocuser PRIVATE ${LIBS})
+
+# TARGET 4: Rotator Calibration Utility
+add_executable(testRotator 
+    src/testRotator.cpp 
+    src/WaveShareStepper.cpp
+)
+target_link_libraries(testRotator PRIVATE ${LIBS})

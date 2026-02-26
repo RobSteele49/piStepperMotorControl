@@ -2,7 +2,10 @@
  * Project:    LX200 Focuser Automation
  * Component:  Focuser Diagnostic & Calibration
  * File:       testFocuser.cpp
+ * Author:     Robert D. Steele
+ * Date:       2026-02-25
  * Version:    1.1 (Calibration Added)
+ * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
 #include <iostream>
