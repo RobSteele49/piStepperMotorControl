@@ -4,7 +4,7 @@
  * File:       LX200_DualController.cpp
  * Author:     Robert D. Steele
  * Date:       2026-02-24
- * Version:    4.2
+ * Version:    4.3 (Added clearLog utility)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -29,6 +29,21 @@ WaveShareStepper* g_foc = nullptr;
 WaveShareStepper* g_rot = nullptr;
 
 // --- UTILITIES ---
+
+void clearLog() {
+    std::cout << "Are you sure you want to delete all night_log.txt entries? (y/N): ";
+    char confirm;
+    std::cin >> confirm;
+    if (tolower(confirm) == 'y') {
+        std::ofstream logFile("night_log.txt", std::ios::trunc); // 'trunc' wipes the file
+        if (logFile.is_open()) {
+            std::cout << "[INFO] Log file cleared." << std::endl;
+            logFile.close();
+        }
+    } else {
+        std::cout << "[INFO] Operation cancelled." << std::endl;
+    }
+}
 
 void logSession(long long fPos, long long rPos) {
     std::ofstream logFile("night_log.txt", std::ios_base::app);
@@ -96,7 +111,7 @@ void printMenu(long long fPos, long long rPos) {
     std::cout << " FOCUSER: [1-3] IN (0.1, 1, 5 Rev) | [4-6] OUT" << std::endl;
     std::cout << " ROTATOR: [7] 1/16 CW | [8] 1/16 CCW" << std::endl;
     std::cout << " PRESETS: [V] View/Apply | [K] Keep Current | [Y] Sync" << std::endl;
-    std::cout << " UTILS:   [G] GoTo  | [M] Move  | [R] Re-Seat | [L] Log" << std::endl;
+    std::cout << " UTILS:   [G] GoTo  | [M] Move  | [R] Re-Seat | [L] Log | [C] Clear Log" << std::endl;
     std::cout << " EXIT:    [P] Park & Log | [Q] Quit" << std::endl;
     std::cout << "--------------------------------------------------------" << std::endl;
     std::cout << " Selection: ";
@@ -134,6 +149,8 @@ int main() {
             case '6': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 5.0, FOC_SPEED_MAX, 800, CW); break;
             case '7': rotator.moveStepsRamped(STEPS_PER_REV / 16, ROT_SPEED_MED, 400, CW); break;
             case '8': rotator.moveStepsRamped(STEPS_PER_REV / 16, ROT_SPEED_MED, 400, CCW); break;
+
+	    case 'C': clearLog(); break;
 
             case 'L': viewLog(); break;
 
