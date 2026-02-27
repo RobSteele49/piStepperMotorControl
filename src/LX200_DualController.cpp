@@ -4,7 +4,7 @@
  * File:       LX200_DualController.cpp
  * Author:     Robert D. Steele
  * Date:       2026-02-24
- * Version:    4.4 (Added G, M, and R cases)
+ * Version:    4.6 (Adding an unlock command)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -17,6 +17,7 @@
 #include <ctime>
 #include "WaveShareStepper.hpp"
 #include "config.h"
+#include "AlpacaServer.hpp" // Add this include
 
 struct Preset {
     std::string name;
@@ -112,6 +113,7 @@ void printMenu(long long fPos, long long rPos) {
     std::cout << " ROTATOR: [7] 1/16 CW | [8] 1/16 CCW" << std::endl;
     std::cout << " PRESETS: [V] View/Apply | [K] Keep Current | [Y] Sync" << std::endl;
     std::cout << " UTILS:   [G] GoTo  | [M] Move  | [R] Re-Seat | [L] Log | [C] Clear Log" << std::endl;
+    std::cout << " POWER:   [U] Unlock Motors (Release Holding Torque)" << std::endl; // Add this line
     std::cout << " EXIT:    [P] Park & Log | [Q] Quit" << std::endl;
     std::cout << "--------------------------------------------------------" << std::endl;
     std::cout << " Selection: ";
@@ -131,9 +133,15 @@ int main() {
 
     g_foc = &focuser; g_rot = &rotator;
 
+     g_foc = &focuser; g_rot = &rotator;
+
+    // --- START ALPACA SERVER ---
+    AlpacaServer alpaca(&focuser, &rotator);
+    alpaca.start(8080); // Server starts in its own background thread
+    // ---------------------------
+    
     char choice;
     while (true) {
-        // FIXED LINE 102
         printMenu(focuser.getCurrentPosition(), rotator.getCurrentPosition());
         
         if (!(std::cin >> choice)) break;
@@ -227,6 +235,13 @@ int main() {
                 break;
             }
 
+	    case 'U': { // Unlock Motors
+                std::cout << "\n[POWER] Disabling motor coils. Motors are now free-spinning." << std::endl;
+                focuser.setPower(false);
+                rotator.setPower(false);
+                break;
+            }
+	      
             default: {
                 std::cout << "\n[!] '" << choice << "' is not a valid option. Please try again." << std::endl;
                 // Clear any leftover junk in the input buffer
@@ -237,6 +252,7 @@ int main() {
         } // End of Switch	
     }
 
+    alpaca.stop(); // Cleanly shut down thread when you quit
     gpioTerminate();
     return 0;
 }
