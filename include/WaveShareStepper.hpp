@@ -8,6 +8,7 @@
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
+
 #ifndef WAVESHARE_STEPPER_HPP
 #define WAVESHARE_STEPPER_HPP
 
@@ -23,29 +24,32 @@ public:
     WaveShareStepper(MotorChannel channel);
     ~WaveShareStepper();
 
-    // Changed 'int steps' to 'long long steps' to match implementation
-    // Changed 'Direction dir' to 'int dir' for simpler switch handling
     void moveStepsRamped(long long steps, int maxSpeed, int rampMs, int dir);
     void moveTo(long long targetPosition, int speed);
     void setPower(bool on);
     void syncPosition(long long newPos);
     long long getCurrentPosition() { return _stepPosition; }
     
+    // NEW: Check if we need to release the motor
+    void checkTimeout(); 
+    bool isPowerOn() { return _isPowered; }
+
     void reSeat(int speed); 
     static void globalEmergencyStop(WaveShareStepper* instance);
-
     void setLimits(long long minPos, long long maxPos);
     bool isMoveSafe(long long steps, int direction);
   
 private:
     int _en, _dir, _step;
-    int _backlash;
-    int _prefDir;
-    long long _limitMin;
-    long long _limitMax;
+    int _backlash, _prefDir;
+    long long _limitMin, _limitMax;
     MotorChannel _channel;
-    long long _stepPosition; // This is the variable name used in the class
-    std::chrono::steady_clock::time_point last_activity;
+    long long _stepPosition;
+    bool _isPowered; // Track state
+    
+    std::chrono::steady_clock::time_point _lastActivity;
+    void updateActivity(); // Helper to reset the timer
+    
     void savePosition();
     void loadPosition();
 };

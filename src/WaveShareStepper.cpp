@@ -25,7 +25,7 @@
  */
 
 
-WaveShareStepper::WaveShareStepper(MotorChannel channel) : _channel(channel) {
+WaveShareStepper::WaveShareStepper(MotorChannel channel) : _channel(channel), _isPowered(false) {
     if (channel == MOTOR_1) {
         _en = 12; _dir = 13; _step = 19; 
         _backlash = FOC_BACKLASH;
@@ -45,10 +45,52 @@ WaveShareStepper::WaveShareStepper(MotorChannel channel) : _channel(channel) {
     gpioSetMode(_step, PI_OUTPUT);
     loadPosition();
     setPower(false);
+    updateActivity();
 }
 
 WaveShareStepper::~WaveShareStepper() {
     setPower(false);
+}
+
+void WaveShareStepper::updateActivity() {
+    _lastActivity = std::chrono::steady_clock::now();
+}
+
+void WaveShareStepper::setPower(bool on) {
+  gpioWrite(_en, on ? 1 : 0);
+  _isPowered = on;
+  if (on) updateActivity(); // Reset timer when power is turned on
+}
+
+void WaveShareStepper::checkTimeout() {
+  if (!_isPowered) return; // Already off, nothing to do
+  
+  auto now = std::chrono::steady_clock::now();
+  auto elapsed = std::chrono::duration_cast<std::chrono::seconds>(now - _lastActivity).count();
+
+    if (elapsed >= 30) {
+        std::cout << "\n[POWER] Auto-Release: " << (_channel == MOTOR_1 ? "Focuser" : "Rotator") << " idling for 30s." << std::endl;
+        setPower(false);
+    }
+}
+
+// New version of moveStepsRamped created to include the 30s countdown timer
+void WaveShareStepper::moveStepsRamped(long long steps, int maxSpeed, int rampMs, int dir) {
+    if (!isMoveSafe(steps, dir)) return; 
+    
+    setPower(true); // This also calls updateActivity()
+    gpioWrite(_dir, (dir == CW) ? 1 : 0);
+
+    for (long long i = 0; i < steps; i++) {
+        gpioWrite(_step, 1);
+        gpioDelay(maxSpeed);
+        gpioWrite(_step, 0);
+        gpioDelay(maxSpeed);
+        _stepPosition += (dir == CW) ? 1 : -1;
+    }
+    
+    updateActivity(); // Start the 30s countdown AFTER the move ends
+    savePosition();
 }
 
 void WaveShareStepper::setLimits(long long minPos, long long maxPos) {
@@ -69,10 +111,6 @@ bool WaveShareStepper::isMoveSafe(long long steps, int direction) {
     return true;
 }
 
-void WaveShareStepper::setPower(bool on) {
-    gpioWrite(_en, on ? 1 : 0);
-}
-
 void WaveShareStepper::reSeat(int speed) {
     int pushDir = (_prefDir == 1) ? CW : CCW;
     int pullDir = (pushDir == CW) ? CCW : CW;
@@ -81,23 +119,6 @@ void WaveShareStepper::reSeat(int speed) {
     
     moveStepsRamped(_backlash * 2, speed, 500, pullDir);
     moveStepsRamped(_backlash * 2, speed + 400, 800, pushDir);
-}
-
-// FIX: Matched signature to .hpp (long long steps, int dir)
-void WaveShareStepper::moveStepsRamped(long long steps, int maxSpeed, int rampMs, int dir) {
-    if (!isMoveSafe(steps, dir)) return; 
-    
-    setPower(true);
-    gpioWrite(_dir, (dir == CW) ? 1 : 0);
-
-    for (long long i = 0; i < steps; i++) {
-        gpioWrite(_step, 1);
-        gpioDelay(maxSpeed);
-        gpioWrite(_step, 0);
-        gpioDelay(maxSpeed);
-        _stepPosition += (dir == CW) ? 1 : -1;
-    }
-    savePosition();
 }
 
 void WaveShareStepper::moveTo(long long targetPosition, int speed) {
