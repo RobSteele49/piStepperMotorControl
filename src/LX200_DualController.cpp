@@ -220,13 +220,21 @@ int main() {
                 break;
             }
 
-            case 'R': { // Re-Seat (Backlash Normalization)
+	    case 'R': { // Re-Seat (Backlash Normalization)
                 std::cout << "\n[RE-SEAT] Normalizing Focuser mechanism..." << std::endl;
                 focuser.reSeat(FOC_SPEED_MED);
                 std::cout << "[OK] Focuser re-seated against preferred direction." << std::endl;
                 break;
             }
-        }
+
+            default: {
+                std::cout << "\n[!] '" << choice << "' is not a valid option. Please try again." << std::endl;
+                // Clear any leftover junk in the input buffer
+                std::cin.clear();
+                std::cin.ignore(100, '\n');
+                break;
+            }
+        } // End of Switch	
     }
 
     gpioTerminate();
