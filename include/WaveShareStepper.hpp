@@ -4,7 +4,7 @@
  * File:       WaveShareStepper.hpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    3.2 (Added private variables _limitMin and _limitMax)
+ * Version:    3.3 (Added clock for release motors.)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -13,6 +13,7 @@
 
 #include <pigpio.h>
 #include <string>
+#include <chrono>
 
 enum MotorChannel { MOTOR_1, MOTOR_2 };
 enum Direction { CW, CCW };
@@ -44,6 +45,7 @@ private:
     long long _limitMax;
     MotorChannel _channel;
     long long _stepPosition; // This is the variable name used in the class
+    std::chrono::steady_clock::time_point last_activity;
     void savePosition();
     void loadPosition();
 };

@@ -1,3 +1,13 @@
+/*
+ * Project:    LX200 Focuser Automation
+ * Component:  WaveShare Stepper Driver Header
+ * File:       AlpacaServer.hpp
+ * Author:     Robert D. Steele
+ * Date:       2026-02-27
+ * Version:    1.1
+ * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
+ */
+
 #ifndef ALPACA_SERVER_HPP
 #define ALPACA_SERVER_HPP
 
@@ -46,6 +56,17 @@ private:
       // 3. Device: Connected (NINA always checks this first)
       svr.Get("/api/v1/focuser/0/connected", [&](const httplib::Request& req, httplib::Response& res) {
 	res.set_content("{\"Value\":true,\"ClientTransactionID\":0,\"ServerTransactionID\":1,\"ErrorNumber\":0,\"ErrorMessage\":\"\"}", "application/json");
+      });
+      
+      // Management Route: Tells ASCOM what devices are here
+      svr.Get("/management/v1/configureddevices", [&](const httplib::Request& req, httplib::Response& res) {
+	std::cout << "[ALREADY] ASCOM is discovering devices..." << std::endl;
+	res.set_content("{\"Value\":[{\"DeviceName\":\"PiFocuser\",\"DeviceType\":\"Focuser\",\"DeviceNumber\":0,\"UniqueID\":\"12345\"}],\"ClientTransactionID\":0,\"ServerTransactionID\":1,\"ErrorNumber\":0}", "application/json");
+});
+
+      // Device Route: Connected State
+      svr.Get("/api/v1/focuser/0/connected", [&](const httplib::Request& req, httplib::Response& res) {
+	res.set_content("{\"Value\":true,\"ClientTransactionID\":0,\"ServerTransactionID\":1,\"ErrorNumber\":0}", "application/json");
       });
       
         // --- FOCUSER ROUTES ---
