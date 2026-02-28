@@ -112,14 +112,35 @@ bool WaveShareStepper::isMoveSafe(long long steps, int direction) {
 }
 
 void WaveShareStepper::reSeat(int speed) {
-    int pushDir = (_prefDir == 1) ? CW : CCW;
-    int pullDir = (pushDir == CW) ? CCW : CW;
-
-    std::cout << "[RE-SEAT] Normalizing " << (_channel == MOTOR_1 ? "Focuser" : "Rotator") << "..." << std::endl;
+    // 1. Engage power immediately
+    setPower(true);
     
-    moveStepsRamped(_backlash * 2, speed, 500, pullDir);
-    moveStepsRamped(_backlash * 2, speed + 400, 800, pushDir);
+    // 2. Move AWAY from the telescope (CW)
+    // This intentionally introduces mechanical slack
+    std::cout << "[RE-SEAT] Clearing gear tension (CW)..." << std::endl;
+    moveStepsRamped(RESEAT_GAP_STEPS, speed, 400, CW);
+    
+    // 3. Small pause to let vibrations settle
+    usleep(200000); 
+
+    // 4. Move TOWARD the telescope (CCW)
+    // This takes up all the slack and ends with the gears under tension
+    std::cout << "[RE-SEAT] Finalizing seat against gravity (CCW)..." << std::endl;
+    moveStepsRamped(RESEAT_GAP_STEPS, speed, 400, CCW);
+    
+    // 5. Update the watchdog timer so it doesn't auto-release too soon
+    _lastActivityTime = time(NULL); 
+    std::cout << "[RE-SEAT] Done. Mechanical train is now normalized." << std::endl;
 }
+
+// oldy logic:
+//void WaveShareStepper::reSeat(int speed) {
+//    int pushDir = (_prefDir == 1) ? CW : CCW;
+//    int pullDir = (pushDir == CW) ? CCW : CW;
+//    std::cout << "[RE-SEAT] Normalizing " << (_channel == MOTOR_1 ? "Focuser" : "Rotator") << "..." << std::endl;
+//    moveStepsRamped(_backlash * 2, speed, 500, pullDir);
+//    moveStepsRamped(_backlash * 2, speed + 400, 800, pushDir);
+//}
 
 void WaveShareStepper::moveTo(long long targetPosition, int speed) {
     if (targetPosition > _limitMax) {

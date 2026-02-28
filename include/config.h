@@ -4,7 +4,7 @@
  * File:       config.h
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    3.4 (Calibrating focuser actual turnes)
+ * Version:    3.5 (Added a constant for reseating logic)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -39,5 +39,7 @@ const int ROT_SPEED_MED  = 2400;
 const int ROT_SPEED_SLOW = 5000;
 const int ROT_BACKLASH   = 200;          // Halved
 const int ROT_PREF_DIR   = 1; 
+
+#define RESEAT_GAP_STEPS 1000  // Adjust this based on how much 'slop' your gears have
 
 #endif

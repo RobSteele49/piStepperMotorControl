@@ -4,7 +4,7 @@
  * File:       LX200_DualController.cpp
  * Author:     Robert D. Steele
  * Date:       2026-02-24
- * Version:    4.7 (Adding non-blocking keyboard input)
+ * Version:    4.9 (Adding back missing 'R' Re-Seat switch logic)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -177,7 +177,19 @@ void printMenu(long long fPos, long long rPos) {
                 case 'C': clearLog(); break;
                 case 'L': viewLog(); break;
 
-                case 'V': {
+
+		case 'R': { // Re-Seat (Backlash Normalization)
+		  std::cout << "\n[RE-SEAT] Starting backlash normalization..." << std::endl;
+		  std::cout << "[INFO] Moving focuser to seat gears in preferred direction." << std::endl;
+                
+		  // This calls the internal logic in WaveShareStepper
+		  focuser.reSeat(FOC_SPEED_MED);
+                
+		  std::cout << "[OK] Focuser mechanism re-seated and ready." << std::endl;
+		  break;
+		}
+	   
+	      case 'V': {
                     if (g_presets.empty()) { std::cout << "No presets." << std::endl; break; }
                     for (size_t i=0; i < g_presets.size(); ++i) 
                         std::cout << "[" << i << "] " << g_presets[i].name << std::endl;
@@ -256,6 +268,33 @@ void printMenu(long long fPos, long long rPos) {
                     break;
                 }
 
+                 case 'M': { // Relative Move (Offset)
+		   int motor;
+		   long long offset;
+		   std:: cout << "\n[MOVE] Motor Select ([1] Focuser | [2] Rotator): "; 
+		   if (!(std::cin >> motor)) { std::cin.clear(); std::cin.ignore(100, '\n'); break; }
+		   
+		   std::cout << "Enter Step Offset (e.g., 500 or -500): ";
+		   if (!(std::cin >> offset)) { std::cin.clear(); std::cin.ignore(100, '\n'); break; }
+		   
+		   if (motor == 1) {
+		     long long current = focuser.getCurrentPosition();
+		     long long target = current + offset;
+		     std::cout << "Focuser: Moving from " << current << " to " << target << "..." << std::endl;
+		     focuser.moveTo(target, FOC_SPEED_MED);
+		   } 
+		   else if (motor == 2) {
+		     long long current = rotator.getCurrentPosition();
+		     long long target = current + offset;
+		     std::cout << "Rotator: Moving from " << current << " to " << target << "..." << std::endl;
+		     rotator.moveTo(target, ROT_SPEED_MED);
+		   } 
+		   else {
+		     std::cout << "[!] Invalid motor selection." << std::endl;
+		   }
+		   break;
+		 }
+		
                 case 'U': { 
                     std::cout << "\n[POWER] Manual Unlock Triggered." << std::endl;
                     focuser.setPower(false);
