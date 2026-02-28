@@ -148,87 +148,132 @@ void printMenu(long long fPos, long long rPos) {
       alpaca.start(8080); 
       
       printMenu(focuser.getCurrentPosition(), rotator.getCurrentPosition());
-      
+
       while (true) {
         // 1. THE WATCHDOG: Always runs to check 30s timeout
         focuser.checkTimeout();
         rotator.checkTimeout();
-	
+
         // 2. THE INPUT CHECK
         if (kbhit()) {
-	  char choice;
-	  if (!(std::cin >> choice)) break;
-	  
-	  // Use toupper to handle both 'q' and 'Q' automatically
-	  switch (toupper(choice)) {
-	  case 'Q': 
-	    alpaca.stop();
-	    gpioTerminate();
-	    return 0;
-	    
-	  case '1': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 0.1, FOC_SPEED_MED, 500, CCW); break;
-	  case '2': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 1.0, FOC_SPEED_MAX, 800, CCW); break;
-	  case '3': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 5.0, FOC_SPEED_MAX, 800, CCW); break;
-	  case '4': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 0.1, FOC_SPEED_MED, 500, CW); break;
-	  case '5': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 1.0, FOC_SPEED_MAX, 800, CW); break;
-	  case '6': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 5.0, FOC_SPEED_MAX, 800, CW); break;
-	  case '7': rotator.moveStepsRamped(STEPS_PER_REV / 16, ROT_SPEED_MED, 400, CW); break;
-	  case '8': rotator.moveStepsRamped(STEPS_PER_REV / 16, ROT_SPEED_MED, 400, CCW); break;
-	    
-	  case 'C': clearLog(); break;
-	  case 'L': viewLog(); break;
-	    
-	  case 'V': {
-	    if (g_presets.empty()) { std::cout << "No presets." << std::endl; break; }
-	    for (size_t i=0; i < g_presets.size(); ++i) 
-	      std::cout << "[" << i << "] " << g_presets[i].name << std::endl;
-	    int idx; std::cout << "Select Index: "; std::cin >> idx;
-	    if (idx >= 0 && (size_t)idx < g_presets.size()) {
-	      rotator.moveTo(g_presets[idx].rotPos, ROT_SPEED_MED);
-	      focuser.moveTo(g_presets[idx].focPos, FOC_SPEED_MED);
-	    }
-	    break;
-	  }
-	  case 'K': {
-	    std::string n; std::cout << "Name: "; std::cin >> n;
-	    g_presets.push_back({n, focuser.getCurrentPosition(), rotator.getCurrentPosition()});
-	    savePresets(); break;
-	  }
-	  case 'P': 
-	    logSession(focuser.getCurrentPosition(), rotator.getCurrentPosition());
-	    rotator.moveTo(0, ROT_SPEED_MED);
-	    focuser.moveTo(0, FOC_SPEED_MED);
-	    break;
-            
-	  case 'G': { 
-	    int motor; long long target;
-	    std::cout << "\n[GOTO] Motor Select ([1] Focuser | [2] Rotator): ";
-	    if (!(std::cin >> motor)) { std::cin.clear(); std::cin.ignore(100, '\n'); break; }
-	    std::cout << "Enter Target Position: ";
-	    if (!(std::cin >> target)) { std::cin.clear(); std::cin.ignore(100, '\n'); break; }
-	    if (motor == 1) focuser.moveTo(target, FOC_SPEED_MED);
-	    else if (motor == 2) rotator.moveTo(target, ROT_SPEED_MED);
-	    break;
-	  }
-	    
-	  case 'U': { 
-	    std::cout << "\n[POWER] Manual Unlock Triggered." << std::endl;
-	    focuser.setPower(false);
-	    rotator.setPower(false);
-	    break;
-	  }
-	    
-	  default:
-	    std::cout << "\n[!] '" << choice << "' is not valid." << std::endl;
-	    break;
-	  } // End of switch
-	  
+            char choice;
+            if (!(std::cin >> choice)) break;
+
+            switch (toupper(choice)) {
+                case 'Q': 
+                    alpaca.stop();
+                    gpioTerminate();
+                    return 0;
+
+                case '1': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 0.1, FOC_SPEED_MED, 500, CCW); break;
+                case '2': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 1.0, FOC_SPEED_MAX, 800, CCW); break;
+                case '3': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 5.0, FOC_SPEED_MAX, 800, CCW); break;
+                case '4': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 0.1, FOC_SPEED_MED, 500, CW); break;
+                case '5': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 1.0, FOC_SPEED_MAX, 800, CW); break;
+                case '6': focuser.moveStepsRamped(STEPS_PER_KNOB_REV * 5.0, FOC_SPEED_MAX, 800, CW); break;
+                case '7': rotator.moveStepsRamped(STEPS_PER_REV / 16, ROT_SPEED_MED, 400, CW); break;
+                case '8': rotator.moveStepsRamped(STEPS_PER_REV / 16, ROT_SPEED_MED, 400, CCW); break;
+
+                case 'C': clearLog(); break;
+                case 'L': viewLog(); break;
+
+                case 'V': {
+                    if (g_presets.empty()) { std::cout << "No presets." << std::endl; break; }
+                    for (size_t i=0; i < g_presets.size(); ++i) 
+                        std::cout << "[" << i << "] " << g_presets[i].name << std::endl;
+                    int idx; std::cout << "Select Index: "; std::cin >> idx;
+                    if (idx >= 0 && (size_t)idx < g_presets.size()) {
+                        rotator.moveTo(g_presets[idx].rotPos, ROT_SPEED_MED);
+                        focuser.moveTo(g_presets[idx].focPos, FOC_SPEED_MED);
+                    }
+                    break;
+                }
+                case 'K': {
+                    std::string n; std::cout << "Name: "; std::cin >> n;
+                    g_presets.push_back({n, focuser.getCurrentPosition(), rotator.getCurrentPosition()});
+                    savePresets(); break;
+                }
+                
+                // --- RESTORED SYNC OPTION ---
+		case 'Y': { // Sync Position (Calibration) with Safety Check
+		  int motor;
+		  long long newPos;
+		  long long minLim, maxLim;
+		  std::string motorName;
+		  
+		  std::cout << "\n[SYNC] Motor Select ([1] Focuser | [2] Rotator): ";
+		  if (!(std::cin >> motor)) { std::cin.clear(); std::cin.ignore(100, '\n'); break; }
+		  
+		  std::cout << "Enter current physical position to sync to: ";
+		  if (!(std::cin >> newPos)) { std::cin.clear(); std::cin.ignore(100, '\n'); break; }
+		  
+		  // Assign limits based on selection
+		  if (motor == 1) {
+                    minLim = FOC_LIMIT_MIN; maxLim = FOC_LIMIT_MAX; motorName = "Focuser";
+		  } else {
+                    minLim = ROT_LIMIT_MIN; maxLim = ROT_LIMIT_MAX; motorName = "Rotator";
+		  }
+		  
+		  // --- SAFETY CHECK ---
+		  if (newPos < minLim || newPos > maxLim) {
+                    std::cout << "\n[WARNING] The position " << newPos << " is OUTSIDE the defined limits for " << motorName << "!" << std::endl;
+                    std::cout << "Defined Limits: [" << minLim << " to " << maxLim << "]" << std::endl;
+                    std::cout << "Syncing to this value may cause travel issues. Proceed anyway? (y/N): ";
+                    
+                    char confirm;
+                    std::cin >> confirm;
+                    if (toupper(confirm) != 'Y') {
+		      std::cout << "[ABORTED] Sync cancelled. Position remains unchanged." << std::endl;
+		      break;
+                    }
+		  }
+		  
+		  // Perform the sync
+		  if (motor == 1) {
+                    focuser.syncPosition(newPos);
+		  } else if (motor == 2) {
+                    rotator.syncPosition(newPos);
+		  }
+		  std::cout << "[OK] " << motorName << " synced to " << newPos << std::endl;
+		  break;
+		}
+
+
+                case 'P': 
+                    logSession(focuser.getCurrentPosition(), rotator.getCurrentPosition());
+                    rotator.moveTo(0, ROT_SPEED_MED);
+                    focuser.moveTo(0, FOC_SPEED_MED);
+                    break;
+                
+                case 'G': { 
+                    int motor; long long target;
+                    std::cout << "\n[GOTO] Motor Select ([1] Focuser | [2] Rotator): ";
+                    if (!(std::cin >> motor)) { std::cin.clear(); std::cin.ignore(100, '\n'); break; }
+                    std::cout << "Enter Target Position: ";
+                    if (!(std::cin >> target)) { std::cin.clear(); std::cin.ignore(100, '\n'); break; }
+                    if (motor == 1) focuser.moveTo(target, FOC_SPEED_MED);
+                    else if (motor == 2) rotator.moveTo(target, ROT_SPEED_MED);
+                    break;
+                }
+
+                case 'U': { 
+                    std::cout << "\n[POWER] Manual Unlock Triggered." << std::endl;
+                    focuser.setPower(false);
+                    rotator.setPower(false);
+                    break;
+                }
+
+                default:
+                    std::cout << "\n[!] '" << choice << "' is not valid." << std::endl;
+                    break;
+            } // End of switch
+
             // Repaint menu ONLY when a key is pressed
-	  printMenu(focuser.getCurrentPosition(), rotator.getCurrentPosition());
-        } // End of if(kbhit)
-	
+            printMenu(focuser.getCurrentPosition(), rotator.getCurrentPosition());
+        } 
+
         // 3. THE HEARTBEAT: Prevents 100% CPU usage while waiting
-        usleep(100000); // 100ms
+        usleep(100000); 
       } // End of while(true)
       
       return 0;
