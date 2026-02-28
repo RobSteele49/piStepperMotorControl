@@ -3,8 +3,8 @@
  * Component:  WaveShare Stepper Driver Header
  * File:       AlpacaServer.hpp
  * Author:     Robert D. Steele
- * Date:       2026-02-27
- * Version:    1.1
+ * Date:       2026-02-23
+ * Version:    2.0 (Update 2/28/23 from Gemini)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -41,76 +41,79 @@ private:
     bool running;
 
     void run(int port) {
+        // --- MANAGEMENT ROUTES ---
+        svr.Get("/management/v1/description", [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content("{\"Value\":{\"ServerName\":\"Pi-LX200-Focuser\",\"Manufacturer\":\"Steele-Astronomy\",\"ManufacturerVersion\":\"1.0\",\"Location\":\"Observatory\"},\"ClientTransactionID\":0,\"ServerTransactionID\":1,\"ErrorNumber\":0,\"ErrorMessage\":\"\"}", "application/json");
+        });
 
+        svr.Get("/management/v1/configureddevices", [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content("{\"Value\":[{\"DeviceName\":\"Dual Controller Focuser\",\"DeviceType\":\"Focuser\",\"DeviceNumber\":0,\"UniqueID\":\"pi-foc-01\"},{\"DeviceName\":\"Dual Controller Rotator\",\"DeviceType\":\"Rotator\",\"DeviceNumber\":0,\"UniqueID\":\"pi-rot-01\"}],\"ClientTransactionID\":0,\"ServerTransactionID\":1,\"ErrorNumber\":0,\"ErrorMessage\":\"\"}", "application/json");
+        });
 
-      // 1. Management: Description (Tells ASCOM who made this)
-      svr.Get("/management/v1/description", [&](const httplib::Request& req, httplib::Response& res) {
-	res.set_content("{\"Value\":{\"ServerName\":\"Pi-LX200-Focuser\",\"Manufacturer\":\"Steele-Astronomy\",\"ManufacturerVersion\":\"1.0\",\"Location\":\"Observatory\"},\"ClientTransactionID\":0,\"ServerTransactionID\":1,\"ErrorNumber\":0,\"ErrorMessage\":\"\"}", "application/json");
-});
+        // --- FOCUSER MANDATORY ROUTES ---
+        svr.Get("/api/v1/focuser/0/connected", [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatBoolResponse(true, req), "application/json");
+        });
 
-      // 2. Management: Configured Devices (Tells ASCOM what is plugged in)
-      svr.Get("/management/v1/configureddevices", [&](const httplib::Request& req, httplib::Response& res) {
-	res.set_content("{\"Value\":[{\"DeviceName\":\"Dual Controller Focuser\",\"DeviceType\":\"Focuser\",\"DeviceNumber\":0,\"UniqueID\":\"pi-foc-01\"},{\"DeviceName\":\"Dual Controller Rotator\",\"DeviceType\":\"Rotator\",\"DeviceNumber\":0,\"UniqueID\":\"pi-rot-01\"}],\"ClientTransactionID\":0,\"ServerTransactionID\":1,\"ErrorNumber\":0,\"ErrorMessage\":\"\"}", "application/json");
-});
+        svr.Get("/api/v1/focuser/0/absolute", [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatBoolResponse(true, req), "application/json"); // Yes, we are absolute
+        });
 
-      // 3. Device: Connected (NINA always checks this first)
-      svr.Get("/api/v1/focuser/0/connected", [&](const httplib::Request& req, httplib::Response& res) {
-	res.set_content("{\"Value\":true,\"ClientTransactionID\":0,\"ServerTransactionID\":1,\"ErrorNumber\":0,\"ErrorMessage\":\"\"}", "application/json");
-      });
-      
-      // Management Route: Tells ASCOM what devices are here
-      svr.Get("/management/v1/configureddevices", [&](const httplib::Request& req, httplib::Response& res) {
-	std::cout << "[ALREADY] ASCOM is discovering devices..." << std::endl;
-	res.set_content("{\"Value\":[{\"DeviceName\":\"PiFocuser\",\"DeviceType\":\"Focuser\",\"DeviceNumber\":0,\"UniqueID\":\"12345\"}],\"ClientTransactionID\":0,\"ServerTransactionID\":1,\"ErrorNumber\":0}", "application/json");
-});
+        svr.Get("/api/v1/focuser/0/maxstep", [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatResponse(FOC_LIMIT_MAX, req), "application/json");
+        });
 
-      // Device Route: Connected State
-      svr.Get("/api/v1/focuser/0/connected", [&](const httplib::Request& req, httplib::Response& res) {
-	res.set_content("{\"Value\":true,\"ClientTransactionID\":0,\"ServerTransactionID\":1,\"ErrorNumber\":0}", "application/json");
-      });
-      
-        // --- FOCUSER ROUTES ---
         svr.Get("/api/v1/focuser/0/position", [&](const httplib::Request& req, httplib::Response& res) {
-            long long pos = focuser->getCurrentPosition();
-            std::cout << "[NET] Focuser Position Request -> " << pos << std::endl;
-            res.set_content(formatResponse(pos, req), "application/json");
+            res.set_content(formatResponse(focuser->getCurrentPosition(), req), "application/json");
+        });
+
+        svr.Get("/api/v1/focuser/0/ismoving", [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatBoolResponse(false, req), "application/json"); // Simplification: assume moves are instant for now
         });
 
         svr.Put("/api/v1/focuser/0/move", [&](const httplib::Request& req, httplib::Response& res) {
             if (req.has_param("Position")) {
                 long long target = std::stoll(req.get_param_value("Position"));
-                std::cout << "[NET] Focuser Move Command -> " << target << std::endl;
+                std::cout << "[NET] Focuser Move -> " << target << std::endl;
                 focuser->moveTo(target, FOC_SPEED_MED);
             }
             res.set_content(formatResponse(0, req), "application/json");
         });
 
-        // --- ROTATOR ROUTES ---
-        svr.Get("/api/v1/rotator/0/position", [&](const httplib::Request& req, httplib::Response& res) {
-            long long pos = rotator->getCurrentPosition();
-            std::cout << "[NET] Rotator Position Request -> " << pos << std::endl;
-            res.set_content(formatResponse(pos, req), "application/json");
+        // --- ROTATOR MANDATORY ROUTES ---
+        svr.Get("/api/v1/rotator/0/connected", [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatBoolResponse(true, req), "application/json");
         });
 
-        svr.Put("/api/v1/rotator/0/move", [&](const httplib::Request& req, httplib::Response& res) {
+        svr.Get("/api/v1/rotator/0/position", [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatResponse(rotator->getCurrentPosition(), req), "application/json");
+        });
+
+        svr.Put("/api/v1/rotator/0/moveabsolute", [&](const httplib::Request& req, httplib::Response& res) {
             if (req.has_param("Position")) {
                 long long target = std::stoll(req.get_param_value("Position"));
-                std::cout << "[NET] Rotator Move Command -> " << target << std::endl;
                 rotator->moveTo(target, ROT_SPEED_MED);
             }
             res.set_content(formatResponse(0, req), "application/json");
         });
 
-        std::cout << "\n[SUCCESS] Alpaca Server active on http://192.168.5.11:" << port << std::endl;
+        std::cout << "\n[SUCCESS] Alpaca Server active on port " << port << std::endl;
         
         if (!svr.listen("0.0.0.0", port)) {
-            std::cerr << "[ERROR] Alpaca Server failed to bind to port " << port << "!" << std::endl;
+            std::cerr << "[ERROR] Port " << port << " binding failed!" << std::endl;
         }
     }
 
+    // Helper for Numbers
     std::string formatResponse(long long val, const httplib::Request& req) {
         std::string clientID = req.has_param("ClientTransactionID") ? req.get_param_value("ClientTransactionID") : "0";
         return "{\"Value\":" + std::to_string(val) + ",\"ClientTransactionID\":" + clientID + ",\"ErrorNumber\":0,\"ErrorMessage\":\"\"}";
+    }
+
+    // Helper for Booleans (True/False)
+    std::string formatBoolResponse(bool val, const httplib::Request& req) {
+        std::string clientID = req.has_param("ClientTransactionID") ? req.get_param_value("ClientTransactionID") : "0";
+        return "{\"Value\":" + std::string(val ? "true" : "false") + ",\"ClientTransactionID\":" + clientID + ",\"ErrorNumber\":0,\"ErrorMessage\":\"\"}";
     }
 };
 
