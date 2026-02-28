@@ -4,7 +4,7 @@
  * File:       AlpacaServer.hpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    2.0 (Update 2/28/23 from Gemini)
+ * Version:    2.0 (Update 2/28/26 from Gemini)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -16,6 +16,7 @@
 #include "config.h"
 #include <thread>
 #include <iostream>
+#include <string>
 
 class AlpacaServer {
 public:
@@ -56,7 +57,7 @@ private:
         });
 
         svr.Get("/api/v1/focuser/0/absolute", [&](const httplib::Request& req, httplib::Response& res) {
-            res.set_content(formatBoolResponse(true, req), "application/json"); // Yes, we are absolute
+            res.set_content(formatBoolResponse(true, req), "application/json");
         });
 
         svr.Get("/api/v1/focuser/0/maxstep", [&](const httplib::Request& req, httplib::Response& res) {
@@ -68,7 +69,8 @@ private:
         });
 
         svr.Get("/api/v1/focuser/0/ismoving", [&](const httplib::Request& req, httplib::Response& res) {
-            res.set_content(formatBoolResponse(false, req), "application/json"); // Simplification: assume moves are instant for now
+            // Future improvement: check if motor is actually stepping
+            res.set_content(formatBoolResponse(false, req), "application/json");
         });
 
         svr.Put("/api/v1/focuser/0/move", [&](const httplib::Request& req, httplib::Response& res) {
@@ -92,15 +94,16 @@ private:
         svr.Put("/api/v1/rotator/0/moveabsolute", [&](const httplib::Request& req, httplib::Response& res) {
             if (req.has_param("Position")) {
                 long long target = std::stoll(req.get_param_value("Position"));
+                std::cout << "[NET] Rotator Move -> " << target << std::endl;
                 rotator->moveTo(target, ROT_SPEED_MED);
             }
             res.set_content(formatResponse(0, req), "application/json");
         });
 
-        std::cout << "\n[SUCCESS] Alpaca Server active on port " << port << std::endl;
+        std::cout << "\n[SUCCESS] Alpaca Server active on http://192.168.5.11:" << port << std::endl;
         
         if (!svr.listen("0.0.0.0", port)) {
-            std::cerr << "[ERROR] Port " << port << " binding failed!" << std::endl;
+            std::cerr << "[ERROR] Alpaca Server failed to bind to port " << port << "!" << std::endl;
         }
     }
 
@@ -110,7 +113,7 @@ private:
         return "{\"Value\":" + std::to_string(val) + ",\"ClientTransactionID\":" + clientID + ",\"ErrorNumber\":0,\"ErrorMessage\":\"\"}";
     }
 
-    // Helper for Booleans (True/False)
+    // Helper for Booleans
     std::string formatBoolResponse(bool val, const httplib::Request& req) {
         std::string clientID = req.has_param("ClientTransactionID") ? req.get_param_value("ClientTransactionID") : "0";
         return "{\"Value\":" + std::string(val ? "true" : "false") + ",\"ClientTransactionID\":" + clientID + ",\"ErrorNumber\":0,\"ErrorMessage\":\"\"}";
