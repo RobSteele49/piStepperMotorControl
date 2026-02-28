@@ -4,7 +4,7 @@
  * File:       WaveShareStepper.cpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    3.3 Added safety limit checks
+ * Version:    3.4 (Changed moveTo to only allow moves in + terroritory)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -78,6 +78,8 @@ void WaveShareStepper::checkTimeout() {
 // New version of moveStepsRamped created to include the 30s countdown timer
 void WaveShareStepper::moveStepsRamped(long long steps, int maxSpeed, int rampMs, int dir) {
     if (!isMoveSafe(steps, dir)) return; 
+
+    _isMoving = true; // <--- START
     
     setPower(true); // This also calls updateActivity()
     gpioWrite(_dir, (dir == CW) ? 1 : 0);
@@ -89,6 +91,8 @@ void WaveShareStepper::moveStepsRamped(long long steps, int maxSpeed, int rampMs
         gpioDelay(maxSpeed);
         _stepPosition += (dir == CW) ? 1 : -1;
     }
+
+    _isMoving = false; // <--- END
     
     updateActivity(); // Start the 30s countdown AFTER the move ends
     savePosition();
@@ -127,19 +131,30 @@ void WaveShareStepper::reSeat(int speed) {
 }
 
 void WaveShareStepper::moveTo(long long targetPosition, int speed) {
-    if (targetPosition > _limitMax) {
-        std::cout << "[LIMIT] Clamping to Max: " << _limitMax << std::endl;
-        targetPosition = _limitMax;
-    }
+    // 1. Safety Clamp: Never allow a position lower than the defined Minimum (usually 0)
     if (targetPosition < _limitMin) {
-        std::cout << "[LIMIT] Clamping to Min: " << _limitMin << std::endl;
+        std::cout << "[SAFETY] Clamping negative/low target " << targetPosition 
+                  << " to Min: " << _limitMin << std::endl;
         targetPosition = _limitMin;
     }
 
+    // 2. Safety Clamp: Never allow a position higher than the defined Maximum
+    if (targetPosition > _limitMax) {
+        std::cout << "[LIMIT] Clamping high target " << targetPosition 
+                  << " to Max: " << _limitMax << std::endl;
+        targetPosition = _limitMax;
+    }
+
+    // 3. Calculate Delta from where we ARE to where we WANT to be
     long long delta = targetPosition - _stepPosition;
+    
+    // If we are already there, stop
     if (delta == 0) return;
     
+    // 4. Determine direction and execute
     int dir = (delta > 0) ? CW : CCW;
+    std::cout << "[MOTOR] Moving " << std::abs(delta) << " steps to reach position " << targetPosition << std::endl;
+    
     moveStepsRamped(std::abs(delta), speed, DEFAULT_RAMP_MS, dir);
 }
 

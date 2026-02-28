@@ -4,7 +4,7 @@
  * File:       WaveShareStepper.hpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    3.3 (Added clock for release motors.)
+ * Version:    3.4 (Added isMoving private and getter)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -38,6 +38,7 @@ public:
     static void globalEmergencyStop(WaveShareStepper* instance);
     void setLimits(long long minPos, long long maxPos);
     bool isMoveSafe(long long steps, int direction);
+    bool isMoving() { return _isMoving; } // Add this getter
   
 private:
     int _en, _dir, _step;
@@ -46,7 +47,8 @@ private:
     MotorChannel _channel;
     long long _stepPosition;
     bool _isPowered; // Track state
-    
+    bool _isMoving = false;
+      
     std::chrono::steady_clock::time_point _lastActivity;
     void updateActivity(); // Helper to reset the timer
     

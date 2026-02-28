@@ -4,7 +4,7 @@
  * File:       config.h
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    3.5 (Added a constant for reseating logic)
+ * Version:    3.6 (Set FOC_LIMIT_MIN to 0 per Gemini)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -18,8 +18,13 @@ const int STEPS_PER_REV = 3200;         // 200 * 16
 const int DEFAULT_RAMP_MS = 800;
 const int STEPS_PER_KNOB_REV = 2370; // changing based on hardware
 
+/*
+ * FOC_LIMIT_MIN was -50000. Gemini is recommending it be 0
+ * which I'll do for now.
+ */
+
 // --- FOCUSER LIMITS (Adjust these based on your specific scope) ---
-const long long FOC_LIMIT_MIN = -50000;  // Example: 15.6 revs inward
+const long long FOC_LIMIT_MIN = 0;
 const long long FOC_LIMIT_MAX = 50000;   // Example: 15.6 revs outward
 
 // --- ROTATOR LIMITS (Prevents cable wrap) ---

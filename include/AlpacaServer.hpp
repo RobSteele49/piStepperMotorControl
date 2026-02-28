@@ -4,7 +4,7 @@
  * File:       AlpacaServer.hpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    2.2 (Updated identity logic)
+ * Version:    2.3 (New helper for void responses)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -118,22 +118,44 @@ private:
         svr.Get("/api/v1/focuser/0/maxstep", foc_max);
         svr.Get("/api/v1/focuser/0/MaxStep", foc_max);
 
-        // IsMoving Property
-        auto foc_mov = [&](const httplib::Request& req, httplib::Response& res) {
-            res.set_content(formatBoolResponse(false, req), "application/json");
+        // NEW: StepSize Property
+        auto foc_stepsize = [&](const httplib::Request& req, httplib::Response& res) {
+            // 1.0 tells ASCOM 1 step = 1 unit. No weird scaling.
+            res.set_content(formatResponse(1, req), "application/json");
         };
+        svr.Get("/api/v1/focuser/0/stepsize", foc_stepsize);
+        svr.Get("/api/v1/focuser/0/StepSize", foc_stepsize);
+
+        // NEW: MaxIncrement Property
+        auto foc_maxinc = [&](const httplib::Request& req, httplib::Response& res) {
+            // This tells ASCOM "Don't ever try to move more than 10k steps in one jump"
+            res.set_content(formatResponse(10000, req), "application/json");
+        };
+        svr.Get("/api/v1/focuser/0/maxincrement", foc_maxinc);
+        svr.Get("/api/v1/focuser/0/MaxIncrement", foc_maxinc);
+
+        // ... (existing position, ismoving routes) ...
+	
+        // IsMoving Property
+	auto foc_mov = [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatBoolResponse(focuser->isMoving(), req), "application/json");
+        };
+	
         svr.Get("/api/v1/focuser/0/ismoving", foc_mov);
         svr.Get("/api/v1/focuser/0/IsMoving", foc_mov);
 
         // Move Command
+        // Update this in Focuser Move and Rotator Move absolute
         auto foc_move_cmd = [&](const httplib::Request& req, httplib::Response& res) {
             if (req.has_param("Position")) {
                 long long target = std::stoll(req.get_param_value("Position"));
                 std::cout << "[NET] Focuser Move -> " << target << std::endl;
                 focuser->moveTo(target, FOC_SPEED_MED);
             }
-            res.set_content(formatResponse(0, req), "application/json");
+            // USE THE NEW VOID RESPONSE HERE
+            res.set_content(formatVoidResponse(req), "application/json");
         };
+	
         svr.Put("/api/v1/focuser/0/move", foc_move_cmd);
         svr.Put("/api/v1/focuser/0/Move", foc_move_cmd);
 
@@ -228,6 +250,13 @@ private:
     std::string formatStringResponse(std::string val, const httplib::Request& req) {
         std::string clientID = req.has_param("ClientTransactionID") ? req.get_param_value("ClientTransactionID") : "0";
         return "{\"Value\":\"" + val + "\",\"ClientTransactionID\":" + clientID + ",\"ErrorNumber\":0,\"ErrorMessage\":\"\"}";
+    }
+
+    // NEW: Helper for "Void" Responses (Commands that don't return a value)
+    std::string formatVoidResponse(const httplib::Request& req) {
+        std::string clientID = req.has_param("ClientTransactionID") ? req.get_param_value("ClientTransactionID") : "0";
+        static uint32_t serverID = 1;
+        return "{\"ClientTransactionID\":" + clientID + ",\"ServerTransactionID\":" + std::to_string(serverID++) + ",\"ErrorNumber\":0,\"ErrorMessage\":\"\"}";
     }
 };
 
