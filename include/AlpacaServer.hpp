@@ -4,7 +4,7 @@
  * File:       AlpacaServer.hpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    2.1 (Update 2/28/26 from Gemini - Case Insensitivity Fix)
+ * Version:    2.2 (Updated identity logic)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -52,7 +52,42 @@ private:
         });
 
         // --- FOCUSER MANDATORY ROUTES (With Case-Insensitivity Aliases) ---
-        
+
+	// Name Property
+        auto foc_name = [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content("{\"Value\":\"Dual-Controller Focuser\",\"ClientTransactionID\":0,\"ErrorNumber\":0,\"ErrorMessage\":\"\"}", "application/json");
+        };
+        svr.Get("/api/v1/focuser/0/name", foc_name);
+        svr.Get("/api/v1/focuser/0/Name", foc_name);
+
+        // Description Property
+        auto foc_desc = [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content("{\"Value\":\"LX200 Stepper Controller via Raspberry Pi\",\"ClientTransactionID\":0,\"ErrorNumber\":0,\"ErrorMessage\":\"\"}", "application/json");
+        };
+        svr.Get("/api/v1/focuser/0/description", foc_desc);
+        svr.Get("/api/v1/focuser/0/Description", foc_desc);
+
+        // DriverInfo Property
+        auto foc_info = [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content("{\"Value\":\"Built by Robert Steele - v2.1\",\"ClientTransactionID\":0,\"ErrorNumber\":0,\"ErrorMessage\":\"\"}", "application/json");
+        };
+        svr.Get("/api/v1/focuser/0/driverinfo", foc_info);
+        svr.Get("/api/v1/focuser/0/DriverInfo", foc_info);
+
+        // DriverVersion Property
+        auto foc_ver = [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content("{\"Value\":\"2.1\",\"ClientTransactionID\":0,\"ErrorNumber\":0,\"ErrorMessage\":\"\"}", "application/json");
+        };
+        svr.Get("/api/v1/focuser/0/driverversion", foc_ver);
+        svr.Get("/api/v1/focuser/0/DriverVersion", foc_ver);
+
+        // InterfaceVersion (Should return 3 for modern Alpaca)
+        auto foc_iface = [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content("{\"Value\":3,\"ClientTransactionID\":0,\"ErrorNumber\":0,\"ErrorMessage\":\"\"}", "application/json");
+        };
+        svr.Get("/api/v1/focuser/0/interfaceversion", foc_iface);
+        svr.Get("/api/v1/focuser/0/InterfaceVersion", foc_iface);
+	
         // Connected Property
         auto foc_conn = [&](const httplib::Request& req, httplib::Response& res) {
             res.set_content(formatBoolResponse(true, req), "application/json");
@@ -105,6 +140,43 @@ private:
 
         // --- ROTATOR MANDATORY ROUTES (With Case-Insensitivity Aliases) ---
 
+	// --- ROTATOR IDENTITY ROUTES ---
+
+        // Name
+        auto rot_name = [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatStringResponse("Dual-Controller Rotator", req), "application/json");
+        };
+        svr.Get("/api/v1/rotator/0/name", rot_name);
+        svr.Get("/api/v1/rotator/0/Name", rot_name);
+
+        // Description
+        auto rot_desc = [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatStringResponse("LX200 Field Rotator via Raspberry Pi", req), "application/json");
+        };
+        svr.Get("/api/v1/rotator/0/description", rot_desc);
+        svr.Get("/api/v1/rotator/0/Description", rot_desc);
+
+        // DriverInfo
+        auto rot_info = [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatStringResponse("Built by Robert Steele - v2.1", req), "application/json");
+        };
+        svr.Get("/api/v1/rotator/0/driverinfo", rot_info);
+        svr.Get("/api/v1/rotator/0/DriverInfo", rot_info);
+
+        // DriverVersion
+        auto rot_ver = [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatStringResponse("2.1", req), "application/json");
+        };
+        svr.Get("/api/v1/rotator/0/driverversion", rot_ver);
+        svr.Get("/api/v1/rotator/0/DriverVersion", rot_ver);
+
+        // InterfaceVersion
+        auto rot_iface = [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatResponse(3, req), "application/json");
+        };
+        svr.Get("/api/v1/rotator/0/interfaceversion", rot_iface);
+        svr.Get("/api/v1/rotator/0/InterfaceVersion", rot_iface);
+	
         // Connected Property
         auto rot_conn = [&](const httplib::Request& req, httplib::Response& res) {
             res.set_content(formatBoolResponse(true, req), "application/json");
@@ -150,6 +222,12 @@ private:
     std::string formatBoolResponse(bool val, const httplib::Request& req) {
         std::string clientID = req.has_param("ClientTransactionID") ? req.get_param_value("ClientTransactionID") : "0";
         return "{\"Value\":" + std::string(val ? "true" : "false") + ",\"ClientTransactionID\":" + clientID + ",\"ErrorNumber\":0,\"ErrorMessage\":\"\"}";
+    }
+
+    // Helper for String Responses
+    std::string formatStringResponse(std::string val, const httplib::Request& req) {
+        std::string clientID = req.has_param("ClientTransactionID") ? req.get_param_value("ClientTransactionID") : "0";
+        return "{\"Value\":\"" + val + "\",\"ClientTransactionID\":" + clientID + ",\"ErrorNumber\":0,\"ErrorMessage\":\"\"}";
     }
 };
 
