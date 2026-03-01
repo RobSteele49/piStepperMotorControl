@@ -4,7 +4,7 @@
  * File:       WaveShareStepper.cpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    3.4 (Changed moveTo to only allow moves in + terroritory)
+ * Version:    3.5 (Fixed halt command)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -77,6 +77,9 @@ void WaveShareStepper::checkTimeout() {
 
 // New version of moveStepsRamped created to include the 30s countdown timer
 void WaveShareStepper::moveStepsRamped(long long steps, int maxSpeed, int rampMs, int dir) {
+
+    _abortMove = false; // Reset the flag before starting
+    
     if (!isMoveSafe(steps, dir)) return; 
 
     _isMoving = true; // <--- START
@@ -85,6 +88,13 @@ void WaveShareStepper::moveStepsRamped(long long steps, int maxSpeed, int rampMs
     gpioWrite(_dir, (dir == CW) ? 1 : 0);
 
     for (long long i = 0; i < steps; i++) {
+
+        // THE KILL SWITCH CHECK
+        if (_abortMove) {
+            std::cout << "[HALT] Aborting move mid-stream!" << std::endl;
+            break; 
+        }
+	
         gpioWrite(_step, 1);
         gpioDelay(maxSpeed);
         gpioWrite(_step, 0);
@@ -174,6 +184,10 @@ void WaveShareStepper::loadPosition() {
     std::ifstream posFile(filename);
     if (posFile.is_open()) { posFile >> _stepPosition; posFile.close(); }
     else { _stepPosition = 0; }
+}
+
+void WaveShareStepper::halt() {
+    _abortMove = true; 
 }
 
 void WaveShareStepper::globalEmergencyStop(WaveShareStepper* instance) {

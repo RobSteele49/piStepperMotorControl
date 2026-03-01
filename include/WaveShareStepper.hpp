@@ -4,7 +4,7 @@
  * File:       WaveShareStepper.hpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    3.4 (Added isMoving private and getter)
+ * Version:    3.5 (Fixing halt issue)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -15,6 +15,7 @@
 #include <pigpio.h>
 #include <string>
 #include <chrono>
+#include <atomic>
 
 enum MotorChannel { MOTOR_1, MOTOR_2 };
 enum Direction { CW, CCW };
@@ -39,6 +40,7 @@ public:
     void setLimits(long long minPos, long long maxPos);
     bool isMoveSafe(long long steps, int direction);
     bool isMoving() { return _isMoving; } // Add this getter
+    void halt();
   
 private:
     int _en, _dir, _step;
@@ -48,6 +50,7 @@ private:
     long long _stepPosition;
     bool _isPowered; // Track state
     bool _isMoving = false;
+    std::atomic<bool> _abortMove{false};
       
     std::chrono::steady_clock::time_point _lastActivity;
     void updateActivity(); // Helper to reset the timer

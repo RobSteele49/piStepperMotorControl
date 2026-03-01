@@ -4,7 +4,7 @@
  * File:       AlpacaServer.hpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    2.3 (New helper for void responses)
+ * Version:    2.4 (Fix halting issue)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -146,20 +146,33 @@ private:
 
         // Move Command
         // Update this in Focuser Move and Rotator Move absolute
-        auto foc_move_cmd = [&](const httplib::Request& req, httplib::Response& res) {
-            if (req.has_param("Position")) {
-                long long target = std::stoll(req.get_param_value("Position"));
-                std::cout << "[NET] Focuser Move -> " << target << std::endl;
-                focuser->moveTo(target, FOC_SPEED_MED);
-            }
-            // USE THE NEW VOID RESPONSE HERE
-            res.set_content(formatVoidResponse(req), "application/json");
-        };
+
+	// Updated Move Command (Threaded)
+	auto foc_move_cmd = [&](const httplib::Request& req, httplib::Response& res) {
+	  if (req.has_param("Position")) {
+	    long long target = std::stoll(req.get_param_value("Position"));
+        
+	    // LAUNCH IN BACKGROUND THREAD
+	    std::thread([this, target]() {
+	      this->focuser->moveTo(target, FOC_SPEED_MED);
+	    }).detach();
+	  }
+	  res.set_content(formatResponse(0, req), "application/json");
+	};
 	
         svr.Put("/api/v1/focuser/0/move", foc_move_cmd);
         svr.Put("/api/v1/focuser/0/Move", foc_move_cmd);
 
 
+	// New Halt Command
+	auto foc_halt = [&](const httplib::Request& req, httplib::Response& res) {
+	  std::cout << "[NET] Focuser HALT triggered!" << std::endl;
+	  focuser->halt(); 
+	  res.set_content(formatResponse(0, req), "application/json");
+	};
+	svr.Put("/api/v1/focuser/0/halt", foc_halt);
+	svr.Put("/api/v1/focuser/0/Halt", foc_halt);
+	
         // --- ROTATOR MANDATORY ROUTES (With Case-Insensitivity Aliases) ---
 
 	// --- ROTATOR IDENTITY ROUTES ---
