@@ -145,8 +145,16 @@ private:
         svr.Get("/api/v1/focuser/0/absolute", [&](const httplib::Request& req, httplib::Response& res) {
             res.set_content(formatBoolResponse(true, req), "application/json");
         });
+
+	// 1. MaxStep: The total travel range (NINA uses this for the slider and safety)
+	svr.Get("/api/v1/focuser/0/maxstep", [&](const httplib::Request& req, httplib::Response& res) {
+	  // Change 50000 to match your actual mechanical limit
+	  res.set_content(formatResponse(50000, req), "application/json"); 
+	});
+
+	// 2. MaxIncrement: The largest single jump allowed (NINA uses this for safety checks)
         svr.Get("/api/v1/focuser/0/maxincrement", [&](const httplib::Request& req, httplib::Response& res) {
-            res.set_content(formatResponse(10000, req), "application/json"); 
+            res.set_content(formatResponse(5000, req), "application/json"); 
         });
 
         // Command: Move
