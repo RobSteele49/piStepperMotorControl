@@ -3,8 +3,8 @@
  * Component:  WaveShare Stepper Driver Header
  * File:       AlpacaServer.hpp
  * Author:     Robert D. Steele
- * Date:       2026-02-23
- * Version:    2.8 (Task ordering problem Gemini is helping me with)
+ * Date:       2026-03-02
+ * Version:    3.0 (Full ASCOM Handshake Support)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -28,15 +28,13 @@ public:
 
     void start(int port = 8080) {
         running = true;
-	printNetworkInfo(port);
+        printNetworkInfo(port);
 
-	// Print this HERE so it shows up before the menu
-	std::cout << "[SYSTEM] Launching Alpaca Service on port " << port << "..." << std::endl;
-    
+        std::cout << "[SYSTEM] Launching Alpaca Service on port " << port << "..." << std::endl;
         server_thread = std::thread(&AlpacaServer::run, this, port);
 
-	// Give the thread a tiny moment to initialize before returning to the menu
-	std::this_thread::sleep_for(std::chrono::milliseconds(100));
+        // Give the thread a moment to initialize
+        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 
     void stop() {
@@ -45,31 +43,30 @@ public:
         if (server_thread.joinable()) server_thread.join();
     }
 
-  void printNetworkInfo(int port) {
-    struct ifaddrs *ifaddr, *ifa;
-    char host[NI_MAXHOST];
-    
-    if (getifaddrs(&ifaddr) == -1) {
-      std::cerr << "[NET] Error getting network interfaces" << std::endl;
-      return;
+    void printNetworkInfo(int port) {
+        struct ifaddrs *ifaddr, *ifa;
+        char host[NI_MAXHOST];
+        
+        if (getifaddrs(&ifaddr) == -1) {
+            std::cerr << "[NET] Error getting network interfaces" << std::endl;
+            return;
+        }
+        
+        std::cout << "\n--- Alpaca Server Network Monitor ---" << std::endl;
+        for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+            if (ifa->ifa_addr == NULL || ifa->ifa_addr->sa_family != AF_INET) continue;
+            
+            if (getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST) == 0) {
+                std::string ifName(ifa->ifa_name);
+                if (ifName != "lo") {
+                    std::cout << "  > " << ifName << ": http://" << host << ":" << port << std::endl;
+                }
+            }
+        }
+        std::cout << "-------------------------------------\n" << std::endl;
+        freeifaddrs(ifaddr);
     }
-    
-    std::cout << "\n--- Alpaca Server Network Monitor ---" << std::endl;
-    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-      if (ifa->ifa_addr == NULL || ifa->ifa_addr->sa_family != AF_INET) continue;
-      
-      if (getnameinfo(ifa->ifa_addr, sizeof(struct sockaddr_in), host, NI_MAXHOST, NULL, 0, NI_NUMERICHOST) == 0) {
-	std::string ifName(ifa->ifa_name);
-	// Ignore the loopback (127.0.0.1)
-	if (ifName != "lo") {
-	  std::cout << "  > " << ifName << ": http://" << host << ":" << port << std::endl;
-	}
-      }
-    }
-    std::cout << "-------------------------------------\n" << std::endl;
-    freeifaddrs(ifaddr);
-  }
-  
+
 private:
     WaveShareStepper* focuser;
     WaveShareStepper* rotator;
@@ -78,60 +75,81 @@ private:
     bool running;
 
     void run(int port) {
+        // ====================================================================
         // --- MANAGEMENT ROUTES ---
+        // ====================================================================
+        
         svr.Get("/management/v1/description", [&](const httplib::Request& req, httplib::Response& res) {
-            res.set_content("{\"Value\":{\"ServerName\":\"Pi-LX200-Focuser\",\"Manufacturer\":\"Steele-Astronomy\",\"ManufacturerVersion\":\"1.0\",\"Location\":\"Observatory\"},\"ClientTransactionID\":0,\"ServerTransactionID\":1,\"ErrorNumber\":0,\"ErrorMessage\":\"\"}", "application/json");
+            res.set_content(R"({"Value":{"ServerName":"Pi-LX200-Focuser","Manufacturer":"Steele-Astronomy","ManufacturerVersion":"1.1","Location":"Observatory"},"ClientTransactionID":0,"ServerTransactionID":1,"ErrorNumber":0,"ErrorMessage":""})", "application/json");
         });
 
         svr.Get("/management/v1/configureddevices", [&](const httplib::Request& req, httplib::Response& res) {
-	  std::string clientID = req.has_param("ClientTransactionID") ? req.get_param_value("ClientTransactionID") : "0";
-	  
-	  // Using a raw string (R"(...)") makes it much easier to ensure the JSON is perfect
-	  std::string json = R"({
-        "Value": [
-        {
-            "DeviceName": "Dual Controller Focuser",
-            "DeviceType": "Focuser",
-            "DeviceNumber": 0,
-            "UniqueID": "Steele-Focuser-01"
-        },
-        {
-            "DeviceName": "Dual Controller Rotator",
-            "DeviceType": "Rotator",
-            "DeviceNumber": 0,
-            "UniqueID": "Steele-Rotator-01" // <--- Change this from Focuser to Rotator
-        }],
-        "ClientTransactionID": )" + clientID + R"(,
-        "ServerTransactionID": 1,
-        "ErrorNumber": 0,
-        "ErrorMessage": ""
-    })";
-	  
-	  res.set_content(json, "application/json");
-	});
-	
+            std::string clientID = req.has_param("ClientTransactionID") ? req.get_param_value("ClientTransactionID") : "0";
+            std::string json = R"({
+                "Value": [
+                {
+                    "DeviceName": "Dual Controller Focuser",
+                    "DeviceType": "Focuser",
+                    "DeviceNumber": 0,
+                    "UniqueID": "Steele-Focuser-01"
+                },
+                {
+                    "DeviceName": "Dual Controller Rotator",
+                    "DeviceType": "Rotator",
+                    "DeviceNumber": 0,
+                    "UniqueID": "Steele-Rotator-01"
+                }],
+                "ClientTransactionID": )" + clientID + R"(,
+                "ServerTransactionID": 1,
+                "ErrorNumber": 0,
+                "ErrorMessage": ""
+            })";
+            res.set_content(json, "application/json");
+        });
+
         // ====================================================================
-        // --- FOCUSER ROUTES ---
+        // --- FOCUSER ROUTES (Device 0) ---
         // ====================================================================
 
+        // Handshake: Connected
+        auto foc_con = [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatBoolResponse(true, req), "application/json");
+        };
+        svr.Get("/api/v1/focuser/0/connected", foc_con);
+        svr.Get("/api/v1/focuser/0/Connected", foc_con);
+        svr.Put("/api/v1/focuser/0/connected", foc_con);
+        svr.Put("/api/v1/focuser/0/Connected", foc_con);
+
+        // Info: Name
         auto foc_name = [&](const httplib::Request& req, httplib::Response& res) {
             res.set_content(formatStringResponse("Dual-Controller Focuser", req), "application/json");
         };
         svr.Get("/api/v1/focuser/0/name", foc_name);
         svr.Get("/api/v1/focuser/0/Name", foc_name);
 
+        // State: Position
         auto foc_pos = [&](const httplib::Request& req, httplib::Response& res) {
             res.set_content(formatResponse(focuser->getCurrentPosition(), req), "application/json");
         };
         svr.Get("/api/v1/focuser/0/position", foc_pos);
         svr.Get("/api/v1/focuser/0/Position", foc_pos);
 
+        // State: IsMoving
         auto foc_mov = [&](const httplib::Request& req, httplib::Response& res) {
             res.set_content(formatBoolResponse(focuser->isMoving(), req), "application/json");
         };
         svr.Get("/api/v1/focuser/0/ismoving", foc_mov);
         svr.Get("/api/v1/focuser/0/IsMoving", foc_mov);
 
+        // Capability: Absolute & MaxIncrement
+        svr.Get("/api/v1/focuser/0/absolute", [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatBoolResponse(true, req), "application/json");
+        });
+        svr.Get("/api/v1/focuser/0/maxincrement", [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatResponse(10000, req), "application/json"); 
+        });
+
+        // Command: Move
         auto foc_move_cmd = [&](const httplib::Request& req, httplib::Response& res) {
             if (req.has_param("Position")) {
                 long long target = std::stoll(req.get_param_value("Position"));
@@ -144,6 +162,7 @@ private:
         svr.Put("/api/v1/focuser/0/move", foc_move_cmd);
         svr.Put("/api/v1/focuser/0/Move", foc_move_cmd);
 
+        // Command: Halt
         auto foc_halt = [&](const httplib::Request& req, httplib::Response& res) {
             focuser->halt(); 
             res.set_content(formatVoidResponse(req), "application/json");
@@ -151,30 +170,47 @@ private:
         svr.Put("/api/v1/focuser/0/halt", foc_halt);
         svr.Put("/api/v1/focuser/0/Halt", foc_halt);
 
+
         // ====================================================================
-        // --- ROTATOR ROUTES ---
+        // --- ROTATOR ROUTES (Device 0) ---
         // ====================================================================
 
+        // Handshake: Connected
+        auto rot_con = [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatBoolResponse(true, req), "application/json");
+        };
+        svr.Get("/api/v1/rotator/0/connected", rot_con);
+        svr.Get("/api/v1/rotator/0/Connected", rot_con);
+        svr.Put("/api/v1/rotator/0/connected", rot_con);
+        svr.Put("/api/v1/rotator/0/Connected", rot_con);
+
+        // Info: Name
         auto rot_name = [&](const httplib::Request& req, httplib::Response& res) {
             res.set_content(formatStringResponse("Dual-Controller Rotator", req), "application/json");
         };
         svr.Get("/api/v1/rotator/0/name", rot_name);
         svr.Get("/api/v1/rotator/0/Name", rot_name);
 
+        // State: Position
         auto rot_pos = [&](const httplib::Request& req, httplib::Response& res) {
             res.set_content(formatResponse(rotator->getCurrentPosition(), req), "application/json");
         };
         svr.Get("/api/v1/rotator/0/position", rot_pos);
         svr.Get("/api/v1/rotator/0/Position", rot_pos);
 
-        // NEW: IsMoving for Rotator
+        // State: IsMoving
         auto rot_mov = [&](const httplib::Request& req, httplib::Response& res) {
             res.set_content(formatBoolResponse(rotator->isMoving(), req), "application/json");
         };
         svr.Get("/api/v1/rotator/0/ismoving", rot_mov);
         svr.Get("/api/v1/rotator/0/IsMoving", rot_mov);
 
-        // UPDATED: Threaded Rotator Move
+        // Capability: CanHalt
+        svr.Get("/api/v1/rotator/0/canhalt", [&](const httplib::Request& req, httplib::Response& res) {
+            res.set_content(formatBoolResponse(true, req), "application/json");
+        });
+
+        // Command: MoveAbsolute
         auto rot_move_cmd = [&](const httplib::Request& req, httplib::Response& res) {
             if (req.has_param("Position")) {
                 long long target = std::stoll(req.get_param_value("Position"));
@@ -188,7 +224,7 @@ private:
         svr.Put("/api/v1/rotator/0/moveabsolute", rot_move_cmd);
         svr.Put("/api/v1/rotator/0/MoveAbsolute", rot_move_cmd);
 
-        // NEW: Halt for Rotator
+        // Command: Halt
         auto rot_halt = [&](const httplib::Request& req, httplib::Response& res) {
             std::cout << "[NET] Rotator HALT triggered!" << std::endl;
             rotator->halt(); 
@@ -197,15 +233,12 @@ private:
         svr.Put("/api/v1/rotator/0/halt", rot_halt);
         svr.Put("/api/v1/rotator/0/Halt", rot_halt);
 
-	// ... inside run(int port) after all routes ...
-	std::cout << "[NET] Thread: Routes defined. Calling listen()..." << std::endl;
-	
-	if (!svr.listen("0.0.0.0", port)) {
-	  std::cerr << "[ERROR] Alpaca Server failed to bind to port " << port << "!" << std::endl;
-	}
-
-	std::cout << "[NET] Thread: Server has stopped." << std::endl;
-        
+        // Start Listening
+        std::cout << "[NET] Thread: Routes defined. Calling listen()..." << std::endl;
+        if (!svr.listen("0.0.0.0", port)) {
+            std::cerr << "[ERROR] Alpaca Server failed to bind to port " << port << "!" << std::endl;
+        }
+        std::cout << "[NET] Thread: Server has stopped." << std::endl;
     }
 
     // --- HELPERS ---
