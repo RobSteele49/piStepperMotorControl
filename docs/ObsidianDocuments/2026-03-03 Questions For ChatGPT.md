@@ -1160,4 +1160,17 @@ If you find that your position is "drifting" (it seems to be in a different plac
 
 **Would you like me to show you how to add an "Emergency Save" to the move loop so it writes the position to the disk every 500 steps, just in case of a power failure?**
 
+Button Box
+- Cables exit from the topof the box
+- Allow 3/8" hole for the cables
 
+ASCOM Device Hub
+- 'Move Out' button moves the focuser knob clockwise, increasing steps
+- 'Move In' button moves the focuser knob counter-clockwide, decreasing steps
+NINA
+- '>>' button moves the focuser knob clockwise, increasing steps
+- '<<' button moves the focuser knob counter-clockwise, decreasing steps
+Focusing Behavior
+- Testing on a testboard
+- Using 50,000 steps was just a starting point. The software/hardware combination is giving me 2500 steps per revolution of the focus knob. As a starting point this gives me a total of 20 revolutions.
+	
