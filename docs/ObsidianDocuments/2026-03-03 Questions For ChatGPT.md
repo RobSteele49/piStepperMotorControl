@@ -1009,4 +1009,155 @@ Stepper HAT info:
 |Customer Reviews|3.7 _3.7 out of 5 stars_   [(25)](https://www.amazon.com/dp/B08CCWDDQR?ref_=ppx_hzsearch_conn_dt_b_fed_asin_title_7#averageCustomerReviewsAnchor)|
 is this info sufficient?
 
+Menu Info:
+
+pi@raspberrypi:~/piStepperMotorControl/build $ sudo ./dual 
+
+--- Alpaca Server Network Monitor ---
+  > eth0: http://192.168.5.11:8080
+  > wlan0: http://192.168.1.216:8080
+-------------------------------------
+
+[SYSTEM] Launching Alpaca Service on port 8080...
+[NET] Thread: Routes defined. Calling listen()...
+
+=================== SYSTEM STATUS ======================
+ FOCUSER:    25000 steps [50.0% Travel]
+ ROTATOR:      500 steps [53.9% Travel]
+--------------------------------------------------------
+ FOCUSER: [1-3] IN (0.1, 1, 5 Rev) | [4-6] OUT
+ ROTATOR: [7] 1/16 CW | [8] 1/16 CCW
+ PRESETS: [V] View/Apply | [K] Keep Current | [Y] Sync
+ UTILS:   [G] GoTo  | [M] Move  | [R] Re-Seat | [L] Log | [C] Clear Log
+ POWER:   [U] Unlock Motors (Release Holding Torque)
+ EXIT:    [P] Park & Log | [Q] Quit
+--------------------------------------------------------
+
+Since your ASCOM connection is now working, these local menu options serve as your "Manual Override" and "Maintenance" station. While NINA handles the automated imaging, this menu allows you to manage the hardware directly at the telescope.
+
+Here is a detailed breakdown of what each function does:
+
+---
+
+## ### PRESETS: Managing Known Positions
+
+Presets are used to store and recall specific focus points (e.g., the exact focus point for a specific camera/eyepiece combination or a specific filter).
+
+- **`[V]` View/Apply:** Opens a list of your saved focus or rotation points. Selecting one will command the motor to move directly to that coordinate.
+    
+- **`[K]` Keep Current:** Takes the **current** position of the focuser or rotator and saves it into a preset slot. You'll usually be prompted to give it a name (like "Filter_Red").
+    
+- **`[Y]` Sync:** This is a **software-only reset**. It tells the Pi: _"Ignore your current number; pretend we are actually at Step X."_ This is vital if you manually moved the motor by hand and the software's "mental map" is now wrong.
+    
+
+---
+
+## ### UTILS: Mechanical Tools & Diagnostics
+
+These are the "Power User" commands for moving and monitoring the system.
+
+- **`[G]` GoTo:** An **Absolute** move. You type in a specific step number (e.g., `12500`), and the motor moves there.
+    
+- **`[M]` Move:** A **Relative** move. Instead of a destination, you provide a distance (e.g., `+500` or `-100`).
+    
+- **`[R]` Re-Seat:** This is a calibration routine. It typically drives the motor toward a physical limit (or a small distance) to "tighten" the mechanical train and clear out any mechanical slop (backlash).
+    
+- **`[L]` Log:** Displays the internal system log. This shows you exactly what commands NINA or ASCOM have been sending in the background.
+    
+- **`[C]` Clear Log:** Wipes the log history to keep the screen clean for the next diagnostic session.
+    
+
+---
+
+## ### POWER: Thermal & Motor Management
+
+- **`[U]` Unlock Motors:** Stepper motors typically consume power even when they aren't moving (this is called **Holding Torque**).
+    
+    - **Pro:** It keeps the telescope from sagging under the weight of a heavy camera.
+        
+    - **Con:** It makes the motors and drivers get **hot**.
+        
+    - Using **Unlock** cuts the power to the coils. The motor will stay where it is, but it will cool down and can be turned by hand.
+        
+
+---
+
+## ### EXIT: Shutting Down Safely
+
+- **`[P]` Park & Log:** The "Safe Shutdown." This usually moves the focuser to its 0-position (fully retracted for transport) and saves the final coordinates to `pos_m1.txt` so the Pi remembers exactly where it was the next time you turn it on.
+    
+- **`[Q]` Quit:** Immediately stops the program. Use this if you are just testing code and don't need to physically "park" the telescope.
+    
+
+---
+
+### A Quick Tip on your "Hardware Failure"
+
+If you find that your **Presets** or **GoTo** commands aren't landing on the right spot, it's usually because the `_stepPosition` in your `WaveShareStepper.cpp` isn't being saved correctly during a crash. Using `[P] Park` ensures that the position is written to the SD card before the program ends.
+
+**Would you like me to show you how to add a "Home" function to the UTILS menu so you can automatically calibrate your zero-point?**
+Info on Position:
+
+Since stepper motors do not have built-in "memory" or sensors (encoders) to tell them where they are physically, the system relies on a **software-based tracking system** called "State Persistence."
+
+In your specific code, this is handled through a simple **"Bookkeeping"** method: writing the numbers to the Raspberry Pi’s SD card.
+
+---
+
+### 1. The "Memory" Files
+
+In your `WaveShareStepper.cpp`, look at the `savePosition()` and `loadPosition()` functions. Every time your motor stops moving, the program creates or updates two small text files on your Pi:
+
+- **`pos_m1.txt`**: Stores the current step count for the Focuser.
+    
+- **`pos_m2.txt`**: Stores the current step count for the Rotator.
+    
+
+### 2. The Startup Sequence
+
+When you run `./dual`, the following happens:
+
+1. **Initialization:** The `WaveShareStepper` constructor is called.
+    
+2. **The "Look Back":** It immediately calls `loadPosition()`.
+    
+3. **Reading the Disk:** The code opens the `.txt` files, reads the number (e.g., `25000`), and sets the internal variable `_stepPosition` to that value.
+    
+4. **Ready for Action:** The system now "knows" where it is because it assumes it hasn't moved since it last wrote that file.
+    
+
+---
+
+### 3. The Vulnerability: "Open Loop" Logic
+
+Because this is an **Open Loop** system, the Pi is essentially "blind." It only knows the position because it remembers what it _told_ the motor to do.
+
+The position will become **incorrect** if:
+
+- **Manual Turning:** You physically turn the focus knob while the power is off.
+    
+- **Stalling:** The motor tries to move but the telescope is stuck (the Pi thinks it moved 100 steps, but the motor just vibrated in place).
+    
+- **Crash/Power Loss:** If the Pi loses power _while_ the motor is mid-move, it might not have the chance to run `savePosition()`, leading to a discrepancy the next time you boot up.
+    
+
+---
+
+### 4. How to Fix "Lost" Positions
+
+This is why your menu includes the **`[Y] Sync`** and **`[P] Park`** options:
+
+- **`[P] Park`**: Forces a final save of the position and moves the motor to a "home" spot (like 0) so you know exactly where it is for next time.
+    
+- **`[Y] Sync`**: If you notice NINA says you are at 25,000 but the focuser is physically bottomed out, you use Sync to tell the software: _"Actually, we are at 0 right now. Reset your files."_
+    
+
+---
+
+### **A Pro-Tip for your Hardware Notes**
+
+If you find that your position is "drifting" (it seems to be in a different place every night), you might be losing steps because the motor current is too low or the speed is too high.
+
+**Would you like me to show you how to add an "Emergency Save" to the move loop so it writes the position to the disk every 500 steps, just in case of a power failure?**
+
 
