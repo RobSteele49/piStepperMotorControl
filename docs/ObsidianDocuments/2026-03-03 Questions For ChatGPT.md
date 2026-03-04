@@ -347,6 +347,61 @@ Phase 6 – Git workflow cleanup
 5. Is this unattended or supervised operation?
     
 
-Answer those and we’ll tighten this into a professional-grade design.
+Answer those and we’ll tighten this intoThe a professional-grade design.
 
 You’re very close to something really nice here.
+
+---
+Answers:
+
+Absolute vs. Relative Positioning
+- For both focuser and rotational I've been looking at relative position
+	- open loop with step counter
+	- The telescope is operated while I'm in the living room, about 50' away. If power goes out I'll just go out and check on it
+Mechanical reduction
+- The motor has a 20 tooth timing belt and the focus knob is a smooth 60 tooth timing belt equivalence.
+	- Smooth so that it can slip easily if it gets jammed
+Micro stepping
+- Using 1/16 microsteps. That was recommended as a good middle ground and a good place to start for focusing.
+Cable Wrap
+- For the focuser I only have to be concerned with the minimum and maximum positions, which is approximately 40 rotations
+- For the rotation of the camera going over 30 degrees over the 180 would be OK. To be honest I have not spent much time thinking about this.
+- Hard limits will be enforced in software
+Button Control
+- Option A looks really nice
+Electrical I/F for Buttons
+- 2 wires per button
+- From Amazon
+	-Product Description:  
+	* Color: Silver  
+	* Head Shape: high head  
+	* Operation Type: Momentary  
+	* Push buttons hole diameter: 12mm  
+	* Push buttons hole thread: 0.75mm  
+	* Switch Max Rating: 2A/12V/24V/125V/250VAC  
+	* Material: nickel plated brass stainless steel  
+	* These switches come with a rubber O-ring which makes them splash resistant but they can NOT be submerged in the water.
+* No LED's so I'll be operating by feel
+* Short cable, less than 1 meter
+* I don't know how best to use buttons, but if there are better ones to buy I can do that
+* See photos
+Observation Questions:
+- Only use when I'm not home
+- Covered with a outdoor rated cover
+- Because of the cold weather I normally keep the computers and even the telscope powered on. The temperature in Frazier Park, CA varies between 0 degree F to about 95 degrees F.
+- I even keep a camera to watch cables
+Architecture
+- Buttons should only i/f with the software
+- My Pi4 s/w is using the Alpaca i/f
+Git
+- I like the checkout/merge/push paradigm
+OpenSCAD Box
+- 12 mm mounting hold
+- <2 mm panel thickness
+- No bigger than necessary for 4 buttons
+- Weather resistant
+Question Answers
+- No limit switches or encoders planned for right no
+- Starting with 1/16 microsteps
+- Cable for buttons around 1 meter
+- Will run the telescope from the living room - about 50 feet (maybe a little less)
