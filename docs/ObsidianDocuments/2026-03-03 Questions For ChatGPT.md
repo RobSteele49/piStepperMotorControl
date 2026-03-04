@@ -960,3 +960,26 @@ To ensure the system remains reachable, the following environment must be mainta
 
 ---
 
+Here is the menu from the LX200_DualController program. There is a log option to store the focuser step. But, it isn't recorded when it terminates.
+
+pi@raspberrypi:~/piStepperMotorControl/build $ sudo ./dual 
+
+--- Alpaca Server Network Monitor ---
+  > eth0: http://192.168.5.11:8080
+  > wlan0: http://192.168.1.216:8080
+-------------------------------------
+
+[SYSTEM] Launching Alpaca Service on port 8080...
+[NET] Thread: Routes defined. Calling listen()...
+
+=================== SYSTEM STATUS ======================
+ FOCUSER:    25000 steps [50.0% Travel]
+ ROTATOR:      500 steps [53.9% Travel]
+--------------------------------------------------------
+ FOCUSER: [1-3] IN (0.1, 1, 5 Rev) | [4-6] OUT
+ ROTATOR: [7] 1/16 CW | [8] 1/16 CCW
+ PRESETS: [V] View/Apply | [K] Keep Current | [Y] Sync
+ UTILS:   [G] GoTo  | [M] Move  | [R] Re-Seat | [L] Log | [C] Clear Log
+ POWER:   [U] Unlock Motors (Release Holding Torque)
+ EXIT:    [P] Park & Log | [Q] Quit
+--------------------------------------------------------
