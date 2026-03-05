@@ -31,6 +31,7 @@ int main() {
 
     std::cout << "--- LX200 FOCUSER CALIBRATION TOOL ---" << std::endl;
     std::cout << "Current STEPS_PER_KNOB_REV in config.h: " << STEPS_PER_KNOB_REV << std::endl;
+    std::cout << "Current FOC_SPEED_MED in config.h:      " << FOC_SPEED_MAX      << std::endl;
 
     char cmd;
     while (true) {

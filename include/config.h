@@ -16,7 +16,8 @@
 // turned into 6 3/4
 const int STEPS_PER_REV = 6400;         // 400 * 16
 const int DEFAULT_RAMP_MS = 1000;
-const int STEPS_PER_KNOB_REV = 4740; // changing based on hardware
+// was 4740
+const int STEPS_PER_KNOB_REV = 6400; // changing based on hardware
 
 /*
  * FOC_LIMIT_MIN was -50000. Gemini is recommending it be 0
@@ -25,16 +26,16 @@ const int STEPS_PER_KNOB_REV = 4740; // changing based on hardware
 
 // --- FOCUSER LIMITS (Adjust these based on your specific scope) ---
 const long long FOC_LIMIT_MIN = 0;
-const long long FOC_LIMIT_MAX = 50000;   // Example: 15.6 revs outward
+const long long FOC_LIMIT_MAX = 100000;   // Example: 15.6 revs outward
 
 // --- ROTATOR LIMITS (Prevents cable wrap) ---
 const long long ROT_LIMIT_MIN = -6400;   // 2 full turns left
 const long long ROT_LIMIT_MAX = 6400;    // 2 full turns right
 
 // --- FOCUSER (M1) - Delays doubled from v3.2 to keep velocity ---
-const int FOC_SPEED_MAX  = 600;          
-const int FOC_SPEED_MED  = 1200;         
-const int FOC_SPEED_SLOW = 2000;         
+const int FOC_SPEED_MAX  = 1200;          
+const int FOC_SPEED_MED  = 2400;         
+const int FOC_SPEED_SLOW = 4000;         
 const int FOC_BACKLASH   = 600;          // Halved for 1/16 resolution
 const int FOC_PREF_DIR   = 1; 
 
