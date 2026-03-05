@@ -27,3 +27,30 @@ A Note on Your CGEM Setup
 Since you are using a German Equatorial Mount (GEM) instead of the original forks, your scope will undergo much more radical orientation changes (meridian flips).
 
 The Golden Rule: Always finish your focus with a Counter-Clockwise turn. This pushes the mirror up against gravity. If you finish with a clockwise turn, gravity can cause the mirror to settle slightly later, ruining your focus or causing "shift" during a long exposure.
+
+2026 03 05 Notes about Software Focusing
+
+Clockwise (CW):
+- This moves the primary mirror Rearward (toward the back of the scope).
+- This pulls the focal point inward.
+Counter-Clockwise (CCW):
+- This moves the primary mirror Forward (toward the corrector plate/front of the scope).
+Park the Mirror
+- For a telescope not in use, the general consensus among SCT experts is to store the mirror in the Rearward position.
+
+ASCOM Device Hub
+- MOVE OUT
+	- Moves focuser clockwise (CW)
+	- Increment steps
+- MOVE IN
+	- Moves focuser counter-clockwise (CCW)
+	- Decrement steps
+
+NINA Focuser
+- '>>'
+	- Moves focuser clockwise (CW)
+	- Increment steps
+- '<<'
+	- Moves focuser counter-clockwise (CCW)
+	- Decrement steps
+
