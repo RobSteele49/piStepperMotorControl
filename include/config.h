@@ -4,7 +4,7 @@
  * File:       config.h
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    3.6 (Set FOC_LIMIT_MIN to 0 per Gemini)
+ * Version:    3.7 (Change to 400 steps per revolution)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -15,7 +15,7 @@
 // Calibrated against the actually hardware where 5 commanded turns
 // turned into 6 3/4
 const int STEPS_PER_REV = 6400;         // 400 * 16
-const int DEFAULT_RAMP_MS = 800;
+const int DEFAULT_RAMP_MS = 1000;
 const int STEPS_PER_KNOB_REV = 4740; // changing based on hardware
 
 /*
