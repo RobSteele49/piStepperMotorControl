@@ -14,9 +14,9 @@
 // --- HARDWARE SETTINGS (1/16 Microstepping) ---
 // Calibrated against the actually hardware where 5 commanded turns
 // turned into 6 3/4
-const int STEPS_PER_REV = 3200;         // 200 * 16
+const int STEPS_PER_REV = 6400;         // 400 * 16
 const int DEFAULT_RAMP_MS = 800;
-const int STEPS_PER_KNOB_REV = 2370; // changing based on hardware
+const int STEPS_PER_KNOB_REV = 4740; // changing based on hardware
 
 /*
  * FOC_LIMIT_MIN was -50000. Gemini is recommending it be 0
