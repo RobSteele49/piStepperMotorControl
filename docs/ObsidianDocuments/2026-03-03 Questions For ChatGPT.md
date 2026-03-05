@@ -1166,11 +1166,10 @@ Button Box
 
 ASCOM Device Hub
 - 'Move Out' button moves the focuser knob clockwise, increasing steps
-- 'Move In' button moves the focuser knob counter-clockwide, decreasing steps
+- 'Move In' button moves the focuser knob counter-clockwise, decreasing steps
 NINA
 - '>>' button moves the focuser knob clockwise, increasing steps
 - '<<' button moves the focuser knob counter-clockwise, decreasing steps
 Focusing Behavior
 - Testing on a testboard
-- Using 50,000 steps was just a starting point. The software/hardware combination is giving me 2500 steps per revolution of the focus knob. As a starting point this gives me a total of 20 revolutions.
-	
+- Using 50,000 steps was just a starting point. The software/hardware combination is giving me 2500 steps per revolution of the focus knob. As a starting point this gives me a total of 20 revolutions. With a JMI focuser I just  manually set the step position to the middle of the steps and moved in and out from there. I'm sure there is something better, but I'm not sure what that will be.
