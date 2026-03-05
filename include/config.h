@@ -4,7 +4,7 @@
  * File:       config.h
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    3.6 (Set FOC_LIMIT_MIN to 0 per Gemini)
+ * Version:    3.7 (Additional experiments with testFocuser)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -16,7 +16,7 @@
 // turned into 6 3/4
 const int STEPS_PER_REV = 3200;         // 200 * 16
 const int DEFAULT_RAMP_MS = 800;
-const int STEPS_PER_KNOB_REV = 2370; // changing based on hardware
+const int STEPS_PER_KNOB_REV = 2480; // changing based on hardware
 
 /*
  * FOC_LIMIT_MIN was -50000. Gemini is recommending it be 0
