@@ -225,10 +225,21 @@ int main() {
                         }
 
                         case 'P': 
-                            logSession(focuser.getCurrentPosition(), rotator.getCurrentPosition());
-                            rotator.moveTo(0, ROT_SPEED_MED);
-                            focuser.moveTo(0, FOC_SPEED_MED);
-                            break;
+			    std::cout << "\n[SYSTEM] Commencing Secure Park..." << std::endl;
+			    logSession(focuser.getCurrentPosition(), rotator.getCurrentPosition());
+			  
+			    // 1. Move Rotator to neutral center
+			    rotator.moveTo(0, ROT_SPEED_MED); 
+			  
+			    // 2. Move Focuser to Rearward storage position (50,000 steps)
+			    focuser.moveTo(FOC_LIMIT_MAX, FOC_SPEED_MED); 
+			  
+			    // 3. Immediately cut power (don't wait for the 30s watchdog)
+			    focuser.setPower(false);
+			    rotator.setPower(false);
+			  
+			    std::cout << "[SYSTEM] Motors parked and unlocked for storage." << std::endl;
+			    break;
 
                         case 'G': { 
                             int motor; long long target;
