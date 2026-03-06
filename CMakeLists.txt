@@ -49,6 +49,13 @@ target_link_libraries(testFocuser PRIVATE ${LIBS})
 add_executable(testRotator src/testRotator.cpp src/WaveShareStepper.cpp)
 target_link_libraries(testRotator PRIVATE ${LIBS})
 
-# FIX: Target name must match the add_executable name
 add_executable(WhereAmI test/WhereAmI.cpp src/WaveShareStepper.cpp)
 target_link_libraries(WhereAmI PRIVATE ${LIBS})
+
+add_executable(FocuserMaxSpeed test/FocuserMaxSpeed.cpp src/WaveShareStepper.cpp)
+target_link_libraries(FocuserMaxSpeed PRIVATE ${LIBS})
+
+add_executable(testRotatorV2 test/testRotatorV2.cpp src/WaveShareStepper.cpp)
+target_link_libraries(testRotatorV2 PRIVATE ${LIBS})
+
+
