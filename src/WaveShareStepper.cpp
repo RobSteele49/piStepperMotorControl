@@ -190,6 +190,22 @@ void WaveShareStepper::halt() {
     _abortMove = true; 
 }
 
+void WaveShareStepper::park() {
+  if (_channel == MOTOR_1) {
+    // FOCUSER: Move to the Rearward position (Full CW / Max Steps)
+    std::cout << "[PARK] Moving Focuser to Rearward storage position: " << _limitMax << std::endl;
+    moveTo(_limitMax, FOC_SPEED_MED);
+  } else {
+    // ROTATOR: Move to Center (Step 0) to avoid cable tension
+    std::cout << "[PARK] Centering Rotator to position 0..." << std::endl;
+    moveTo(0, ROT_SPEED_MED);
+  }
+  
+  // Crucial: Release power so the motors stay cool during storage
+  setPower(false);
+  std::cout << "[PARK] " << (_channel == MOTOR_1 ? "Focuser" : "Rotator") << " secured and powered down." << std::endl;
+}
+
 void WaveShareStepper::globalEmergencyStop(WaveShareStepper* instance) {
     if (instance) instance->setPower(false);
     gpioTerminate();

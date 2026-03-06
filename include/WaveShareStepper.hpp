@@ -4,7 +4,7 @@
  * File:       WaveShareStepper.hpp
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    3.5 (Fixing halt issue)
+ * Version:    3.6 (Added a park facility)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -41,6 +41,7 @@ public:
     bool isMoveSafe(long long steps, int direction);
     bool isMoving() { return _isMoving; } // Add this getter
     void halt();
+    void park();
   
 private:
     int _en, _dir, _step;

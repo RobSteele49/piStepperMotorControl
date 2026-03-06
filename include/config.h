@@ -4,7 +4,7 @@
  * File:       config.h
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    3.7 (Additional experiments with testFocuser)
+ * Version:    3.8 (Change preferred direction to CCW)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -36,7 +36,7 @@ const int FOC_SPEED_MAX  = 600;
 const int FOC_SPEED_MED  = 1200;         
 const int FOC_SPEED_SLOW = 2000;         
 const int FOC_BACKLASH   = 600;          // Halved for 1/16 resolution
-const int FOC_PREF_DIR   = 1; 
+const int FOC_PREF_DIR   = 0;   // 1 for CW, 0 for CCW
 
 // --- ROTATOR (M2) - Delays doubled from v3.2 ---
 const int ROT_SPEED_MAX  = 1600;

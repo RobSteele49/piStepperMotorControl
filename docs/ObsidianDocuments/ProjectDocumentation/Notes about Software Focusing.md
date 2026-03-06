@@ -1,5 +1,7 @@
 2026 03 05
 
+For the LX200 10" Classic
+
 Clockwise (CW):
 - This moves the primary mirror Rearward (toward the back of the scope).
 - This pulls the focal point inward.
