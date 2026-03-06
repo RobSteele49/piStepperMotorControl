@@ -30,16 +30,20 @@ int main() {
               << " REV COUNTS" << std::endl;
     std::cout << "----------------------------------------" << std::endl;
 
-    double focRevs = (double)focuser.getCurrentPosition() / STEPS_PER_REV;
-    double rotRevs = (double)rotator.getCurrentPosition() / STEPS_PER_REV;
+    // Focuser: Calculated against the calibrated Knob Revolutions
+    double focKnobRevs = (double)focuser.getCurrentPosition() / STEPS_PER_KNOB_REV;
+    
+    // Rotator: Calculated against the Motor Shaft (assuming 1:1 or geared)
+    double rotMotorRevs = (double)rotator.getCurrentPosition() / STEPS_PER_REV;
 
     std::cout << std::setw(15) << " Focuser (M1):" 
               << std::setw(15) << focuser.getCurrentPosition() 
-              << std::fixed << std::setprecision(2) << focRevs << " revs" << std::endl;
+              << std::fixed << std::setprecision(2) << focKnobRevs << " Knob Revs" << std::endl;
 
     std::cout << std::setw(15) << " Rotator (M2):" 
               << std::setw(15) << rotator.getCurrentPosition() 
-              << std::fixed << std::setprecision(2) << rotRevs << " revs" << std::endl;
+              << std::fixed << std::setprecision(2) << rotMotorRevs << " Motor Revs" << std::endl;
+
 
     std::cout << "========================================\n" << std::endl;
 

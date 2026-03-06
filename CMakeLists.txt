@@ -2,7 +2,7 @@
 # Project:    LX200 Focuser Automation
 # Component:  Build Configuration
 # File:       CMakeLists.txt
-# Version:    4.7 (Multithreaded Alpaca Support)
+# Version:    4.8 (Added in test code)
 # ==============================================================================
 
 cmake_minimum_required(VERSION 3.10)
@@ -48,3 +48,7 @@ target_link_libraries(testFocuser PRIVATE ${LIBS})
 
 add_executable(testRotator src/testRotator.cpp src/WaveShareStepper.cpp)
 target_link_libraries(testRotator PRIVATE ${LIBS})
+
+# FIX: Target name must match the add_executable name
+add_executable(WhereAmI test/WhereAmI.cpp src/WaveShareStepper.cpp)
+target_link_libraries(WhereAmI PRIVATE ${LIBS})
