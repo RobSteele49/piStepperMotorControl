@@ -58,4 +58,7 @@ target_link_libraries(FocuserMaxSpeed PRIVATE ${LIBS})
 add_executable(testRotatorV2 test/testRotatorV2.cpp src/WaveShareStepper.cpp)
 target_link_libraries(testRotatorV2 PRIVATE ${LIBS})
 
+add_executable(SlowRotationTest test/SlowRotationTest.cpp src/WaveShareStepper.cpp)
+target_link_libraries(SlowRotationTest PRIVATE ${LIBS})
+
 
