@@ -4,7 +4,7 @@
  * File:       LX200_DualController.cpp
  * Author:     Robert D. Steele
  * Date:       2026-02-24
- * Version:    4.10 (Changes to make this run as a background task)
+ * Version:    4.11 (Changes to add button control)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -22,6 +22,7 @@
 #include "config.h"
 #include <cstdio> // Required for STDIN_FILENO
 #include "AlpacaServer.hpp" // Add this include
+#include <chrono>
 
 struct Preset {
     std::string name;
@@ -33,6 +34,18 @@ std::vector<Preset> g_presets;
 WaveShareStepper* g_foc = nullptr;
 WaveShareStepper* g_rot = nullptr;
 
+struct ButtonState {
+    int pin;
+    bool isPressed;
+    std::chrono::steady_clock::time_point pressStartTime;
+};
+
+// Initialize states
+ButtonState btnFocIn  = {BTN_FOC_IN,  false};
+ButtonState btnFocOut = {BTN_FOC_OUT, false};
+ButtonState btnRotCW  = {BTN_ROT_CW,  false};
+ButtonState btnRotCCW = {BTN_ROT_CCW, false};
+
 // --- UTILITIES ---
 
 // Helper: Checks if a key has been pressed without waiting for 'Enter'
@@ -42,6 +55,53 @@ bool kbhit() {
     FD_ZERO(&fds);
     FD_SET(0, &fds);
     return select(1, &fds, NULL, NULL, &tv) > 0;
+}
+
+#include <chrono>
+
+void handlePhysicalButtons(WaveShareStepper* foc, WaveShareStepper* rot) {
+    // Persistent state for ramping logic
+    static auto focInStart = std::chrono::steady_clock::now();
+    static auto focOutStart = std::chrono::steady_clock::now();
+    static auto rotCWStart = std::chrono::steady_clock::now();
+    static auto rotCCWStart = std::chrono::steady_clock::now();
+
+    static bool focInActive = false;
+    static bool focOutActive = false;
+    static bool rotCWActive = false;
+    static bool rotCCWActive = false;
+
+    // --- FOCUSER IN (GPIO 17) ---
+    if (gpioRead(BTN_FOC_IN) == 0) {
+        if (!focInActive) { focInActive = true; focInStart = std::chrono::steady_clock::now(); }
+        auto held = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - focInStart).count();
+        int speed = (held < RAMP_THRESHOLD_SEC) ? FOC_SPEED_SLOW : FOC_SPEED_MAX;
+        foc->moveStepsRamped(20, speed, 0, CCW); 
+    } else { focInActive = false; }
+
+    // --- FOCUSER OUT (GPIO 27) ---
+    if (gpioRead(BTN_FOC_OUT) == 0) {
+        if (!focOutActive) { focOutActive = true; focOutStart = std::chrono::steady_clock::now(); }
+        auto held = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - focOutStart).count();
+        int speed = (held < RAMP_THRESHOLD_SEC) ? FOC_SPEED_SLOW : FOC_SPEED_MAX;
+        foc->moveStepsRamped(20, speed, 0, CW);
+    } else { focOutActive = false; }
+
+    // --- ROTATOR CW (GPIO 22) ---
+    if (gpioRead(BTN_ROT_CW) == 0) {
+        if (!rotCWActive) { rotCWActive = true; rotCWStart = std::chrono::steady_clock::now(); }
+        auto held = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - rotCWStart).count();
+        int speed = (held < RAMP_THRESHOLD_SEC) ? ROT_SPEED_SLOW : ROT_SPEED_MAX;
+        rot->moveStepsRamped(10, speed, 0, CW);
+    } else { rotCWActive = false; }
+
+    // --- ROTATOR CCW (GPIO 23) ---
+    if (gpioRead(BTN_ROT_CCW) == 0) {
+        if (!rotCCWActive) { rotCCWActive = true; rotCCWStart = std::chrono::steady_clock::now(); }
+        auto held = std::chrono::duration_cast<std::chrono::seconds>(std::chrono::steady_clock::now() - rotCCWStart).count();
+        int speed = (held < RAMP_THRESHOLD_SEC) ? ROT_SPEED_SLOW : ROT_SPEED_MAX;
+        rot->moveStepsRamped(10, speed, 0, CCW);
+    } else { rotCCWActive = false; }
 }
 
 void clearLog() {
@@ -135,6 +195,14 @@ void printMenu(long long fPos, long long rPos) {
 int main() {
     if (gpioInitialise() < 0) return 1;
     signal(SIGINT, safety_shutdown);
+
+    // --- GPIO SETUP FOR BUTTONS ---
+    int buttons[] = {BTN_FOC_IN, BTN_FOC_OUT, BTN_ROT_CW, BTN_ROT_CCW};
+    for (int btn : buttons) {
+      gpioSetMode(btn, PI_INPUT);
+      gpioSetPullUpDown(btn, PI_PUD_UP); // Enable internal pull-up resistors
+    }
+    
     loadPresets();
     
     WaveShareStepper focuser(MOTOR_1);
@@ -161,8 +229,12 @@ int main() {
         // 1. THE WATCHDOG: Always runs (even in service mode)
         focuser.checkTimeout();
         rotator.checkTimeout();
+	
+	// 2. Process Hardware Buttons
 
-        // 2. THE INPUT CHECK: Only if interactive
+	handlePhysicalButtons (&focuser, &rotator);
+
+        // 3. THE INPUT CHECK: Only if interactive
         if (isInteractive) {
             if (kbhit()) {
                 char choice;
@@ -279,8 +351,10 @@ int main() {
             } // End kbhit
         } // End isInteractive
 
-        // 3. HEARTBEAT (100ms delay)
-        usleep(100000); 
+        // 3. HEARTBEAT (50ms delay)
+	//    For the button logic that is begin added this usleep  was reduced
+	//    from 100000 (100ms) to 50000 (50ms) for smooter button response
+        usleep(50000); 
     } // End while(true)
 
     return 0;

@@ -4,7 +4,7 @@
  * File:       config.h
  * Author:     Robert D. Steele
  * Date:       2026-02-23
- * Version:    3.8 (Change preferred direction to CCW)
+ * Version:    3.9 (Added in pins for button control)
  * Copyright (c) 2026 Robert D. Steele. All Rights Reserved.
  */
 
@@ -44,6 +44,15 @@ const int ROT_SPEED_MED  = 2400;
 const int ROT_SPEED_SLOW = 5000;
 const int ROT_BACKLASH   = 200;          // Halved
 const int ROT_PREF_DIR   = 1; 
+
+// --- BUTTON BOX PINS (GPIO Numbers) ---
+const int BTN_FOC_IN  = 17; // Pin 11
+const int BTN_FOC_OUT = 27; // Pin 13
+const int BTN_ROT_CW  = 22; // Pin 15
+const int BTN_ROT_CCW = 23; // Pin 16
+
+// --- RAMPING LOGIC ---
+const double RAMP_THRESHOLD_SEC = 2.0; // Seconds before switching to high speed
 
 #define RESEAT_GAP_STEPS 1000  // Adjust this based on how much 'slop' your gears have
 

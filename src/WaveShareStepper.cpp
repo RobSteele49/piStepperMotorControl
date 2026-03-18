@@ -21,8 +21,12 @@
  * 24ac681 commit.
  *
  * The ones used for the recent version written by Gemini.
- *   Motor 1: _en = 4;  _dir = 23; _step = 18
- *   Motor 2: _en = 17; _dir = 27; _step = 22
+ *   Motor 1: _en =  4; _dir = 23; _step = 18;
+ *   Motor 2: _en = 17; _dir = 27; _step = 22;
+ *
+ * The ones that are working for me:
+ *   Motor 1: _en = 12; _dir = 13; _step = 19;
+ *   Motor 2: _en =  4; _dir = 24; _step = 18;
  */
 
 
