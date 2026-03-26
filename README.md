@@ -1,4 +1,5 @@
 
+Markdown
 # piStepperMotorControl - LX200 Focuser & Rotator Automation
 
 **Software for controlling stepper motors on a Raspberry Pi with LX200 protocol support and ASCOM Alpaca integration.**
