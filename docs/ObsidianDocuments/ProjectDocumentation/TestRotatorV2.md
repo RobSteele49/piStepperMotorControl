@@ -4,7 +4,7 @@ I’ve designed this to live in your `test/` directory.
 
 ---
 
-### 1. `test/testRotator.cpp`
+### 1. `test/testRotatorV2.cpp`
 
 C++
 
@@ -12,7 +12,7 @@ C++
 /*
  * Project:    LX200 Automation
  * Component:  Rotator Diagnostic & Cable-Wrap Calibration
- * File:       test/testRotator.cpp
+ * File:       test/testRotatorV2.cpp
  * Author:     Robert D. Steele
  * Date:       2026-03-05
  * Version:    1.0
