@@ -7,7 +7,7 @@ Code
 
 ---
 
-## **File 3: API.md** (Clean Version)
+## **File 2: API.md**
 
 ```markdown
 # ASCOM Alpaca API Reference

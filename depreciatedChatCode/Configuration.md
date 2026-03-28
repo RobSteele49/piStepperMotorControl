@@ -1,15 +1,5 @@
-**Last Updated**: March 26, 2026  
-**Version**: 4.11
-
-Code
 
 ````
-
----
-
-## **File 2: CONFIGURATION.md** (Clean Version)
-
-```markdown
 # Configuration Guide
 
 ## Overview
@@ -455,11 +445,3 @@ Before your first night of observing:
 - [ ]  Confirmed `night_log.txt` is being created
 - [ ]  Tested all speed settings work
 - [ ]  Created backup of your `config.h`
-
----
-
-## Next Steps
-
-- See API.md for integrating with NINA and other astronomy software
-- See README.md for installation and general usage
-- Check `docs/ObsidianDocuments/` for additional project notes
