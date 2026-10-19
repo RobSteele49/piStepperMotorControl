@@ -1,0 +1,19 @@
+There isn't a LX200_DualController executable. In the CMakeLists.txt file
+has the lines:
+
+
+# 3. TARGET: The Master Dual Controller (Terminal UI + Alpaca Server)
+# This links the main UI with the motor logic
+add_executable(dual 
+    src/LX200_DualController.cpp 
+    src/WaveShareStepper.cpp
+)
+target_link_libraries(dual PRIVATE ${LIBS})
+
+In the buid folder are two files killDual.sh and startDual.sh
+
+It looks like the execuable dual is being used instead of LX200_DualController
+
+I'll include the relevant files. Would it be better to modify the readme.md
+file or should I change the output names from the makefile.
+
