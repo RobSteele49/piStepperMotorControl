@@ -24,13 +24,23 @@ find_package(Threads REQUIRED)
 # pigpio: Hardware control | rt: Real-time extensions | Threads: Alpaca Server
 set(LIBS pigpio rt pthread Threads::Threads)
 
+# Old section 3:
 # 3. TARGET: The Master Dual Controller (Terminal UI + Alpaca Server)
 # This links the main UI with the motor logic
-add_executable(dual 
+# add_executable(dual 
+#     src/LX200_DualController.cpp 
+#     src/WaveShareStepper.cpp
+# )
+# target_link_libraries(dual PRIVATE ${LIBS})
+
+# New section 3:
+# 3. TARGET: The Master Dual Controller (Terminal UI + Alpaca Server)
+# This links the main UI with the motor logic
+add_executable(LX200_DualController 
     src/LX200_DualController.cpp 
     src/WaveShareStepper.cpp
 )
-target_link_libraries(dual PRIVATE ${LIBS})
+target_link_libraries(LX200_DualController PRIVATE ${LIBS})
 
 # 4. TARGET: Alpaca Network Test Utility
 # Useful for verifying the Windows -> Pi connection in isolation
